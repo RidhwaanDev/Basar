@@ -66,6 +66,7 @@ func DetectText(w io.Writer, file string, errors chan<- error) error {
 		for _, annotation := range annotations {
 			cnt++
 			repeat_map[annotation.Description] = true
+			// the first line is the ocr of the entire document
 			outputString = append(outputString, annotation.Description)
 			break
 			// fmt.Fprintf(w, "%q\n", annotation.Description)
