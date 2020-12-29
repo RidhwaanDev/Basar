@@ -3,12 +3,10 @@ package main
 import (
 	"fmt"
 	"image/jpeg"
-	"os"
-	// "image/png"
-	// "io"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 )
 
@@ -53,6 +51,8 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("MIME Header: %+v\n", handler.Header)
 
 	tempFile, err := ioutil.TempFile("uploads", "upload-*.jpg")
+	// clear out the uploads directory
+	defer CleanUpTemp()
 
 	defer tempFile.Close()
 
@@ -91,4 +91,5 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 		e := <-errc
 		check(e)
 	}
+
 }

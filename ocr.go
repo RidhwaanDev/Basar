@@ -1,15 +1,11 @@
 package main
 
 import (
+	vision "cloud.google.com/go/vision/apiv1"
 	"context"
 	"fmt"
 	"io"
-	// "log"
 	"os"
-	// "strings"
-
-	vision "cloud.google.com/go/vision/apiv1"
-	// visionpb "google.golang.org/genproto/googleapis/cloud/vision/v1"
 )
 
 var repeat_map = make(map[string]bool)
