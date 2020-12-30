@@ -47,7 +47,6 @@ func main() {
 	fmt.Printf("final result: %s\n", res)
 
 }
-
 func DetectText(file string, resc chan<- string) error {
 	fmt.Printf("detecting text in %s\n", file)
 	ctx := context.Background()
