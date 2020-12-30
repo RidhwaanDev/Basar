@@ -27,6 +27,7 @@ var repeat_map = make(map[string]bool)
 func Print() {
 	fmt.Println("hello")
 }
+
 func DetectText(w io.Writer, file string, errors chan<- error) error {
 	fmt.Printf("detecting text in %s\n", file)
 	ctx := context.Background()
