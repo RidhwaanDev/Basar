@@ -4,43 +4,63 @@ import (
 	vision "cloud.google.com/go/vision/apiv1"
 	"context"
 	"fmt"
-	"io"
+	"log"
 	"os"
+	"strings"
 )
 
 var repeat_map = make(map[string]bool)
 
-//func main() {
-//	// detectText(os.Stdout, "MunirahImanPage6.png")
-//	// file, err := os.Open("images/iman")
-//	//	if err != nil {
-//	//		log.Fatalf("Error opening directory: %s", err)
-//	//	}
-//	//	defer file.Close()
-//	//
-//	//	list, _ := file.Readdirnames(0)
-//	//	for _, name := range list {
-//	//		fmt.Println(name)
-//	//	}
-//}
+const (
+	DESKTOP_PATH = "/Users/ridhwaananayetullah/Desktop/"
+)
 
-func Print() {
-	fmt.Println("hello")
+func main() {
+
+	if len(os.Args) <= 1 {
+		fmt.Println("send location")
+		return
+	}
+	path := DESKTOP_PATH + os.Args[1]
+
+	dir, err := os.Open(path)
+	if err != nil {
+		log.Fatalf("Error opening directory: %s", err)
+	}
+	defer dir.Close()
+
+	list, _ := dir.Readdirnames(0)
+	res := make([]string, 100)
+	resc := make(chan string)
+	for _, name := range list {
+		var filePath = path + "/" + name
+		go DetectText(filePath, resc)
+	}
+
+	close(resc)
+
+	// collect results from OCR goroutine
+	for {
+		res = append(res, <-resc)
+	}
+
+	fmt.Printf("final result: %s\n", res)
+
 }
 
-func DetectText(w io.Writer, file string, errors chan<- error) error {
+func DetectText(file string, resc chan<- string) error {
 	fmt.Printf("detecting text in %s\n", file)
 	ctx := context.Background()
 
 	client, err := vision.NewImageAnnotatorClient(ctx)
 	if err != nil {
-		errors <- err
+		log.Fatal(err)
 		return err
 	}
 
 	f, err := os.Open(file)
 	if err != nil {
-		errors <- err
+		log.Fatal(err)
 		return err
 	}
 
@@ -48,20 +68,21 @@ func DetectText(w io.Writer, file string, errors chan<- error) error {
 
 	image, err := vision.NewImageFromReader(f)
 	if err != nil {
-		errors <- err
+		log.Fatal(err)
 		return err
 	}
 
 	annotations, err := client.DetectTexts(ctx, image, nil, 10)
 	if err != nil {
-		errors <- err
+		log.Fatal(err)
 		return err
 	}
 
+	fmt.Println("No text found.")
 	outputString := make([]string, 50)
 	cnt := 0
 	if len(annotations) == 0 {
-		fmt.Fprintln(w, "No text found.")
+		fmt.Println("No text found.")
 	} else {
 		// fmt.Fprintln(w, "Text:")
 		for _, annotation := range annotations {
@@ -74,8 +95,7 @@ func DetectText(w io.Writer, file string, errors chan<- error) error {
 		}
 	}
 
-	fmt.Println(outputString)
-	fmt.Println(cnt)
-	errors <- nil
+	output := strings.Join(outputString, "\n")
+	resc <- output
 	return nil
 }
