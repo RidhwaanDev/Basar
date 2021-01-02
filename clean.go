@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-func CleanUpTemp() {
+func CleanUpUploadsFolder() {
 	items, err := ioutil.ReadDir("uploads")
 	if err != nil {
 		fmt.Println(err)

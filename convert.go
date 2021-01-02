@@ -3,14 +3,12 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"ioutil"
+	"io/ioutil"
 	"log"
+	"os"
 	"os/exec"
+	"path/filepath"
 )
-
-func main() {
-	ConvertPDFToImages()
-}
 
 // converts the pdf to a series of images. puts those images in the uploads dir
 func ConvertPDFToImages() {
@@ -24,10 +22,12 @@ func ConvertPDFToImages() {
 
 	cmd := exec.Command(prg, arg1, val1, arg2, arg3, val3, arg4)
 	var out bytes.Buffer
+	var stderr bytes.Buffer
 	cmd.Stdout = &out
+	cmd.Stderr = &stderr
 	err := cmd.Run()
 	if err != nil {
-		fmt.Println("error in convert")
+		fmt.Println("an error in convert" + "   " + stderr.String())
 		log.Fatal(err)
 	} else {
 		moveToUploadsDir()
@@ -42,8 +42,9 @@ func moveToUploadsDir() {
 	}
 
 	for _, item := range items {
-		fmt.Println(item.Name())
-		if get
+		if filepath.Ext(item.Name()) == ".jpg" {
+			// fmt.Println(item.Name())
+			os.Rename(item.Name(), "uploads/"+item.Name())
+		}
 	}
-
 }

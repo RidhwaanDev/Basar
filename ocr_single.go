@@ -23,6 +23,7 @@ func ocr_dir(file string) {
 		fmt.Println("send location")
 		return
 	}
+	path := "shaa"
 
 	dir, err := os.Open(path)
 
@@ -32,8 +33,6 @@ func ocr_dir(file string) {
 
 	defer dir.Close()
 	list, _ := dir.Readdirnames(0)
-	res := make([]string, 100)
-	resc := make(chan string)
 	for _, name := range list {
 		var filePath = path + "/" + name
 		ocr(filePath)

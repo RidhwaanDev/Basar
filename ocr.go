@@ -48,7 +48,6 @@ func DetectText(file string) (string, error) {
 		// fmt.Fprintln(w, "Text:")
 		for _, annotation := range annotations {
 			cnt++
-
 			// the first line is the ocr of the entire document
 			outputString = append(outputString, annotation.Description)
 			break

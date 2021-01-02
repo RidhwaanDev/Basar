@@ -7,12 +7,14 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"strings"
+	"path/filepath"
 )
 
 const (
-	host = "localhost"
-	port = "8000"
+	host     = "localhost"
+	port     = "8000"
+	OS_READ  = 04
+	OS_WRITE = 02
 )
 
 func main() {
@@ -33,11 +35,6 @@ func check(err error) {
 	}
 }
 
-// name is a string, not the file path
-func getFileExt(fileName string) string {
-	return strings.Split(fileName.Name(), ".")[1]
-}
-
 // the only file type supported (as of now) is .pdf
 // user should upload a single .pdf -> convert into images -> do ocr -> send .pdf bacl
 func handleUpload(w http.ResponseWriter, r *http.Request) {
@@ -56,43 +53,31 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("File Size: %+v\n", handler.Size)
 	fmt.Printf("MIME Header: %+v\n", handler.Header)
 
-	// check if its pdf
-	if getFileExt(handler.Filename) != "pdf" {
+	// check that they uploaded a pdf
+	if filepath.Ext(handler.Filename) != ".pdf" {
 		fmt.Println("YOU DIDN'T UPLOAD A PDF")
-		panic()
 	}
 
-	// convert pdf to a bunch of images and put them in the uploads directory
-	ConvertPDFToImages()
-
-	tempFile, err := ioutil.TempFile("uploads", "upload-*.jpg")
-
-	// clear out the uploads directory
-	defer CleanUpTemp()
-
-	defer tempFile.Close()
-
-	check(err)
-
-	// get the bytes of the file the user uploaded
+	// read all of the contents of our uploaded file into a
+	// byte array
 	fileBytes, err := ioutil.ReadAll(file)
 	check(err)
 
-	n, err := tempFile.Write(fileBytes)
-	check(err)
+	// create the file
+	e := ioutil.WriteFile("pdf_to_convert.pdf", fileBytes, 0644)
+	check(e)
 
-	fmt.Printf("wrote %d bytes to tempFile!\n", n)
+	// convert pdf to a bunch of images and put them in the uploads directory
+	ConvertPDFToImages()
+	defer CleanUpUploadsFolder()
 
-	fileInfo, err := tempFile.Stat()
-	check(err)
-	// get the file extension. ".png"
-	fileType := strings.Split(fileInfo.Name(), ".")[1]
-	fmt.Printf("file type for %s : %s\n", tempFile.Name(), fileType)
+	items, err := ioutil.ReadDir("uploads")
+	if err != nil {
+		fmt.Println(err)
+	}
 
-	if fileType == "png" || fileType == "jpg" {
-		fmt.Println("found image\n")
-
-		imageFile, err := os.Open(tempFile.Name())
+	for _, item := range items {
+		imageFile, err := os.Open("uploads/" + item.Name())
 		check(err)
 		img, err := jpeg.Decode(imageFile)
 		check(err)
@@ -102,8 +87,9 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 
 		fmt.Println("doing OCR")
 
-		output, e := DetectText(tempFile.Name())
+		output, e := DetectText("uploads/" + item.Name())
 		check(e)
 		fmt.Println(output)
 	}
+
 }
