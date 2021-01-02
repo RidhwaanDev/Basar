@@ -18,6 +18,7 @@ const (
 func main() {
 	StartServer()
 }
+
 func StartServer() {
 	http.HandleFunc("/upload", handleUpload)
 	fmt.Printf("server started at %s\n", host+":"+port)
@@ -69,7 +70,7 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 
 	fileInfo, err := tempFile.Stat()
 	check(err)
-
+	// get the file extension. ".png"
 	fileType := strings.Split(fileInfo.Name(), ".")[1]
 	fmt.Printf("file type for %s : %s\n", tempFile.Name(), fileType)
 
@@ -86,10 +87,8 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 
 		fmt.Println("doing OCR")
 
-		errc := make(chan error)
-		go DetectText(os.Stdout, tempFile.Name(), errc)
-		e := <-errc
+		output, e := DetectText(tempFile.Name())
 		check(e)
+		fmt.Println(output)
 	}
-
 }

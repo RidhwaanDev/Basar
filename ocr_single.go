@@ -17,6 +17,29 @@ func main() {
 	ocr(os.Args[1])
 }
 
+func ocr_dir(file string) {
+
+	if len(os.Args) <= 1 {
+		fmt.Println("send location")
+		return
+	}
+
+	dir, err := os.Open(path)
+
+	if err != nil {
+		log.Fatalf("Error opening directory: %s", err)
+	}
+
+	defer dir.Close()
+	list, _ := dir.Readdirnames(0)
+	res := make([]string, 100)
+	resc := make(chan string)
+	for _, name := range list {
+		var filePath = path + "/" + name
+		ocr(filePath)
+	}
+}
+
 func ocr(file string) {
 	fmt.Printf("detecting text in %s\n", file)
 	ctx := context.Background()
