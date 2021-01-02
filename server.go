@@ -33,6 +33,11 @@ func check(err error) {
 	}
 }
 
+// name is a string, not the file path
+func getFileExt(fileName string) string {
+	return strings.Split(fileName.Name(), ".")[1]
+}
+
 // the only file type supported (as of now) is .pdf
 // user should upload a single .pdf -> convert into images -> do ocr -> send .pdf bacl
 func handleUpload(w http.ResponseWriter, r *http.Request) {
@@ -51,7 +56,17 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 	fmt.Printf("File Size: %+v\n", handler.Size)
 	fmt.Printf("MIME Header: %+v\n", handler.Header)
 
+	// check if its pdf
+	if getFileExt(handler.Filename) != "pdf" {
+		fmt.Println("YOU DIDN'T UPLOAD A PDF")
+		panic()
+	}
+
+	// convert pdf to a bunch of images and put them in the uploads directory
+	ConvertPDFToImages()
+
 	tempFile, err := ioutil.TempFile("uploads", "upload-*.jpg")
+
 	// clear out the uploads directory
 	defer CleanUpTemp()
 
