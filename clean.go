@@ -18,4 +18,6 @@ func CleanUpUploadsFolder() {
 			fmt.Println(err)
 		}
 	}
+	// remove the pdf file
+	os.Remove("pdf_to_convert.pdf")
 }

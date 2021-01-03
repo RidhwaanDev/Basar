@@ -9,7 +9,8 @@ import (
 	"strings"
 )
 
-func DetectText(file string) (string, error) {
+func DetectText(file string, wg *sync.WaitGroup) (string, error) {
+	defer wg.Done()
 	fmt.Printf("detecting text in %s\n", file)
 	ctx := context.Background()
 

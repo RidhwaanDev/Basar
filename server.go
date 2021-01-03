@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"sync"
 )
 
 const (
@@ -75,8 +76,12 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Println(err)
 	}
+	// number of images
+	cnt := 0
+	var wg sync.WaitGroup
 
 	for _, item := range items {
+		cnt++
 		imageFile, err := os.Open("uploads/" + item.Name())
 		check(err)
 		img, err := jpeg.Decode(imageFile)
@@ -86,10 +91,10 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 		jpeg.Encode(w, img, nil)
 
 		fmt.Println("doing OCR")
-
-		output, e := DetectText("uploads/" + item.Name())
-		check(e)
-		fmt.Println(output)
+		wg.Add(1)
+		go DetectText("uploads/"+item.Name(), &wg)
 	}
+
+	wg.Wait()
 
 }
