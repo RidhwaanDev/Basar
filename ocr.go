@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"strings"
+	"sync"
 )
 
 func DetectText(file string, wg *sync.WaitGroup) (string, error) {
@@ -40,7 +41,6 @@ func DetectText(file string, wg *sync.WaitGroup) (string, error) {
 		return "", err
 	}
 
-	fmt.Println("No text found.")
 	outputString := make([]string, 50)
 	cnt := 0
 	if len(annotations) == 0 {
@@ -51,8 +51,8 @@ func DetectText(file string, wg *sync.WaitGroup) (string, error) {
 			cnt++
 			// the first line is the ocr of the entire document
 			outputString = append(outputString, annotation.Description)
+			fmt.Println(outputString)
 			break
-			// fmt.Fprintf(w, "%q\n", annotation.Description)
 		}
 	}
 

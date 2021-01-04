@@ -70,20 +70,22 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 
 	// convert pdf to a bunch of images and put them in the uploads directory
 	ConvertPDFToImages()
+	// ConvertPDFToImages() puts a bunch of temp images in uploads, dir be sure to clean them out
 	defer CleanUpUploadsFolder()
 
 	items, err := ioutil.ReadDir("uploads")
 	if err != nil {
 		fmt.Println(err)
 	}
-	// number of images
-	cnt := 0
+	// for each image, spawn a gorotuine to do OCR on it. Manage all these gorutines with
+	// a waitgroup
 	var wg sync.WaitGroup
 
 	for _, item := range items {
-		cnt++
+
 		imageFile, err := os.Open("uploads/" + item.Name())
 		check(err)
+		// image assumed to be a .jpg. if its not, this will break
 		img, err := jpeg.Decode(imageFile)
 		check(err)
 
