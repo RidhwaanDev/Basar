@@ -4,13 +4,15 @@ import (
 	"github.com/signintech/gopdf"
 )
 
-func main() {
-
-	pdf := gopdf.GoPdf{}
-	pdf.Start(gopdf.Config{PageSize: *gopdf.PageSizeA4})
-	pdf.AddPage()
-
-	pdf.Cell(nil, "您好")
-	pdf.WritePdf("hello.pdf")
-
+type pdf struct {
+	location string // location on disk
+	name     string
+	pages    int
+	size     int64
 }
+
+// number of pages in the PDF
+func (pdf p) GetPageCount(ch <-chan int) {}
+
+// mb size of PDF, usually when client uploads pdf, we will already know that
+func (pdf p) GetSize(ch <-chan int64) {}

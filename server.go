@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"image/jpeg"
-	//	"io"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -108,6 +108,7 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 		// go DetectText("uploads/"+item.Name(), &wg, resc)
 	}
 
+	// wait for goroutines to finish
 	go func() {
 		wg.Wait()
 		close(resc)
@@ -120,7 +121,7 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 		b.WriteString(str)
 	}
 	// put OCR results in a .txt file, returns *os.File and its length
-	_, len := createFileToSendToClient(b.String())
+	finalFile, _, size := createFileToSendToClient(b.String())
 
 	//prepare to send .txt file to client
 
@@ -129,17 +130,17 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 	attachment := fmt.Sprintf("attachment; filename=%s.txt", nameWithoutExt)
 	fmt.Println(attachment)
 
-	w.Header().Set("Content-Disposition", attachment)
-	w.Header().Set("Content-Length", string(len))
-	w.Header().Set("Content-Type", "text/plain")
+	w.Header().Set("Content-Disposition", "attachment; filename=YourFile")
+	w.Header().Set("Content-Type", r.Header.Get("Content-Type"))
 
 	//send the file
-
-	w.Write([]byte("TESTESTSET"))
+	n, err := io.Copy(w, finalFile)
+	check(err)
+	fmt.Printf("finalFile size: %d\t bytes written: %d\n", size, n)
 
 }
 
-func createFileToSendToClient(s string) (*os.File, int64) {
+func createFileToSendToClient(s string) (*os.File, []byte, int64) {
 	// create the file
 	file, err := os.Create("finalres.txt")
 
@@ -151,10 +152,10 @@ func createFileToSendToClient(s string) (*os.File, int64) {
 	fmt.Println("wrote the final .txt file, nice!")
 
 	f, err := file.Stat()
-	len := f.Size()
+	size := f.Size()
 	check(err)
 
 	// return the *os.File and its length
 
-	return file, len
+	return file, b, size
 }
