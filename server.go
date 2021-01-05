@@ -28,7 +28,7 @@ func main() {
 func StartServer() {
 	http.HandleFunc("/upload", handleUpload)
 	fmt.Printf("server started at %s\n", host+":"+port)
-	log.Fatal(http.ListenAndServe(":8000", nil))
+	log.Fatal(http.ListenAndServe("localhost:8000", nil))
 }
 
 // check errors
@@ -133,11 +133,9 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Disposition", "attachment; filename=YourFile")
 	w.Header().Set("Content-Type", r.Header.Get("Content-Type"))
 
-	//send the file
-	n, err := io.Copy(w, finalFile)
 	check(err)
 	fmt.Printf("finalFile size: %d\t bytes written: %d\n", size, n)
-
+	serveFile(w, r)
 }
 
 func createFileToSendToClient(s string) (*os.File, []byte, int64) {
