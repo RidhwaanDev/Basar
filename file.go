@@ -10,15 +10,6 @@ import (
 	"strings"
 )
 
-// func main() {
-// 	StartServer()
-// }
-//
-// func StartServer() {
-// 	http.HandleFunc("/serveFile", serveFile)
-// 	log.Fatal(http.ListenAndServe(":8080", nil))
-// }
-
 func catch(err error) {
 	if err != nil {
 		fmt.Println(err)
