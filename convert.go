@@ -12,6 +12,7 @@ import (
 
 // converts the pdf to a series of images. puts those images in the uploads dir
 func ConvertPDFToImages() {
+	// convert -density 150 input_file.pdf -quality 100 output_file.jpg
 	prg := "convert"
 	arg1 := "-density"
 	val1 := "150"
