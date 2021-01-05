@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -16,16 +15,15 @@ func catch(err error) {
 		panic(err)
 	}
 }
-func serveFile(writer http.ResponseWriter, request *http.Request) {
-	file, err := os.Open("test.txt")
-	if err != nil {
-		return
-	}
-	defer file.Close() // Close the file after function return
+
+func ServeFile(writer http.ResponseWriter, request *http.Request, file *os.File) {
+	fmt.Println("func ServeFile	 in file.go")
+	defer file.Close()
 
 	// Reading header info from the opened file, this will be used for response header "Content-Type"
+	// the first 512 bytes is the header.
 	fileHeader := make([]byte, 512)
-	_, err = file.Read(fileHeader) // File offset is now len(fileHeader)
+	_, err := file.Read(fileHeader) // File offset is now len(fileHeader)
 	if err != nil {
 		catch(err)
 	}
@@ -53,9 +51,9 @@ func serveFile(writer http.ResponseWriter, request *http.Request) {
 
 	// Check if the client requests a range from the file (see RFC 7233 section 4.2)
 	requestRange := request.Header.Get("range")
+	fmt.Printf("request range: %s\n", requestRange)
 
 	if requestRange == "" {
-
 		// No range is defined, tell the client the incoming length of data, the size of the open file
 		writer.Header().Set("Content-Length", strconv.Itoa(int(fileInfo.Size())))
 
@@ -75,6 +73,7 @@ func serveFile(writer http.ResponseWriter, request *http.Request) {
 	splitRange := strings.Split(requestRange, "-")
 
 	if len(splitRange) != 2 {
+		return
 		// 	return fmt.Errorf("invalid values for header 'Range'")
 	}
 
@@ -89,10 +88,12 @@ func serveFile(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	if begin > fileInfo.Size() || end > fileInfo.Size() {
+		return
 		// return fmt.Errorf("range out of bounds for file")
 	}
 
 	if begin >= end {
+		return
 		// return fmt.Errorf("range begin cannot be bigger than range end")
 	}
 

@@ -2,8 +2,6 @@ package main
 
 import (
 	"fmt"
-	"image/jpeg"
-	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -53,7 +51,7 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 	}
 
 	defer file.Close()
-	userUploadfileName := handler.Filename
+	// userUploadfileName := handler.Filename
 	fmt.Printf("Uploaded File: %+v\n", handler.Filename)
 	fmt.Printf("File Size: %+v\n", handler.Size)
 	fmt.Printf("MIME Header: %+v\n", handler.Header)
@@ -87,24 +85,28 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 	var wg sync.WaitGroup
 	// channel of all the OCR results.
 	resc := make(chan string)
-	for _, item := range items {
+	for range items {
+		// for _, item := range items
+		//	imageFile, err := os.Open("uploads/" + item.Name())
+		//	check(err)
 
-		imageFile, err := os.Open("uploads/" + item.Name())
-		check(err)
 		// image assumed to be a .jpg. if its not, this will break
-		img, err := jpeg.Decode(imageFile)
-		check(err)
+		//	img, err := jpeg.Decode(imageFile)
+		//	check(err)
 
-		fmt.Println("image decoded")
-		jpeg.Encode(w, img, nil)
+		// fmt.Println("image decoded")
+		// jpeg.Encode(w, img, nil)
 
 		fmt.Println("doing OCR")
 		wg.Add(1)
+
+		// simulate some work in a goroutine
 		go func() {
 			defer wg.Done()
 			time.Sleep(1 * time.Second)
-			resc <- "hi"
+			resc <- "ديقج  سقةسد ماسدةق يقشع ثد كظ فظ}{ ث"
 		}()
+
 		// go DetectText("uploads/"+item.Name(), &wg, resc)
 	}
 
@@ -114,46 +116,33 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 		close(resc)
 	}()
 
+	// string builder for all the OCR results
 	var b strings.Builder
 	b.Grow(100)
 
+	// iter chan of OCR results
 	for str := range resc {
 		b.WriteString(str)
 	}
-	// put OCR results in a .txt file, returns *os.File and its length
-	finalFile, _, size := createFileToSendToClient(b.String())
+	// put OCR results in a .txt file and return the *os.File object
+	clientFile := createFileToSendToClient(b.String())
 
-	//prepare to send .txt file to client
+	// conver the  .txt file into a pdf, and get the pdf file
+	convertedPDFFile := ConvertTextToPDF(clientFile)
 
-	nameWithoutExt := strings.Split(userUploadfileName, ".")[0]
-
-	attachment := fmt.Sprintf("attachment; filename=%s.txt", nameWithoutExt)
-	fmt.Println(attachment)
-
-	w.Header().Set("Content-Disposition", "attachment; filename=YourFile")
-	w.Header().Set("Content-Type", r.Header.Get("Content-Type"))
-
-	check(err)
-	fmt.Printf("finalFile size: %d\t bytes written: %d\n", size, n)
-	serveFile(w, r)
+	// serve the file to the client
+	ServeFile(w, r, convertedPDFFile)
 }
 
-func createFileToSendToClient(s string) (*os.File, []byte, int64) {
+func createFileToSendToClient(s string) *os.File {
 	// create the file
-	file, err := os.Create("finalres.txt")
+	file, err := os.Create("input.txt")
 
 	// write the OCR results to the file
 	b := []byte(s)
-	err = ioutil.WriteFile("finalres.txt", b, 0644)
+	err = ioutil.WriteFile("input.txt", b, 0666)
+
 	check(err)
 
-	fmt.Println("wrote the final .txt file, nice!")
-
-	f, err := file.Stat()
-	size := f.Size()
-	check(err)
-
-	// return the *os.File and its length
-
-	return file, b, size
+	return file
 }

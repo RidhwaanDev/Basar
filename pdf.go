@@ -1,8 +1,10 @@
 package main
 
 import (
-	"os/exec"
 	"fmt"
+	"log"
+	"os"
+	"os/exec"
 )
 
 type pdf struct {
@@ -13,29 +15,54 @@ type pdf struct {
 }
 
 // number of pages in the PDF
-func (pdf p) GetPageCount(ch <-chan int) {}
+func (p pdf) GetPageCount(ch <-chan int) {}
 
 // mb size of PDF, usually when client uploads pdf, we will already know that
-func (pdf p) GetSize(ch <-chan int64) {}
+func (p pdf) GetSize(ch <-chan int64) {}
+
+const (
+	filename = "input.txt"
+)
+
+//func main() {
+//	file, err := os.Create("input.txt")
+//	defer os.Remove("input.txt")
+//
+//	data := "هيعشف هيشغج شهرغج فذلجة هاسلثعف ةىچآشد غ لثقشهدنبدصزخ،مصذ نغ"
+//	check(err)
+//	err = ioutil.WriteFile("input.txt", []byte(data), 0666)
+//	ConvertTextToPDF(file)
+//}
 
 // headless chrome lol
-func ConvertTextToPDF {
+func ConvertTextToPDF(file *os.File) *os.File {
 	// chrome --headless --disable-gpu --print-to-pdf input.txt
-	prg := "chrome"
-	arg1 := "--headless"
-	arg2 := "--disable-gpu"
-	arg3 := "--print-to-pdf"
-	val1 := "final_res.txt"
-	cmd := exec.Command(prg, arg1, arg2, arg3, val1)
+	info, _ := file.Stat()
+	defer os.Remove(info.Name())
 
-	cmd.Stdout = &out
-	cmd.Stderr = &stderr
+	chromeExec, err := exec.LookPath("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome")
+	check(err)
 
-	err := cmd.Run()
-	if err != nil {
-		fmt.Println("an error in pdf convert" + "   " + stderr.String())
-		log.Fatal(err)
-	} else {
-		fmt.Println("successfully converted .txt to .pdf")
+	cmd := &exec.Cmd{
+		Path:   chromeExec,
+		Args:   []string{chromeExec, "--headless", "--disable-gpu", "--print-to-pdf", "input.txt"},
+		Stdout: os.Stdout,
+		Stderr: os.Stderr,
 	}
+
+	if err = cmd.Run(); err != nil {
+		fmt.Println("an error in pdf convert")
+		log.Fatal(err)
+		return nil
+	}
+
+	var outFile *os.File
+
+	fmt.Println("successfully converted .txt to .pdf")
+
+	if outFile, err = os.Open("output.pdf"); err != nil {
+		check(err)
+	}
+
+	return outFile
 }
