@@ -12,7 +12,7 @@ func CleanUpUploadsFolder() {
 		fmt.Println(err)
 	}
 	for _, item := range items {
-		fmt.Println(item.Name())
+		// fmt.Println(item.Name())
 		err := os.Remove("uploads/" + item.Name())
 		if err != nil {
 			fmt.Println(err)

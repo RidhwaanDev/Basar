@@ -3,12 +3,15 @@ package main
 import (
 	"fmt"
 	"image/jpeg"
+	//	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
+	"time"
 )
 
 const (
@@ -50,6 +53,7 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 	}
 
 	defer file.Close()
+	userUploadfileName := handler.Filename
 	fmt.Printf("Uploaded File: %+v\n", handler.Filename)
 	fmt.Printf("File Size: %+v\n", handler.Size)
 	fmt.Printf("MIME Header: %+v\n", handler.Header)
@@ -70,6 +74,7 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 
 	// convert pdf to a bunch of images and put them in the uploads directory
 	ConvertPDFToImages()
+
 	// ConvertPDFToImages() puts a bunch of temp images in uploads, dir be sure to clean them out
 	defer CleanUpUploadsFolder()
 
@@ -80,7 +85,8 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 	// for each image, spawn a gorotuine to do OCR on it. Manage all these gorutines with
 	// a waitgroup
 	var wg sync.WaitGroup
-
+	// channel of all the OCR results.
+	resc := make(chan string)
 	for _, item := range items {
 
 		imageFile, err := os.Open("uploads/" + item.Name())
@@ -94,9 +100,61 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 
 		fmt.Println("doing OCR")
 		wg.Add(1)
-		go DetectText("uploads/"+item.Name(), &wg)
+		go func() {
+			defer wg.Done()
+			time.Sleep(1 * time.Second)
+			resc <- "hi"
+		}()
+		// go DetectText("uploads/"+item.Name(), &wg, resc)
 	}
 
-	wg.Wait()
+	go func() {
+		wg.Wait()
+		close(resc)
+	}()
 
+	var b strings.Builder
+	b.Grow(100)
+
+	for str := range resc {
+		b.WriteString(str)
+	}
+	// put OCR results in a .txt file, returns *os.File and its length
+	_, len := createFileToSendToClient(b.String())
+
+	//prepare to send .txt file to client
+
+	nameWithoutExt := strings.Split(userUploadfileName, ".")[0]
+
+	attachment := fmt.Sprintf("attachment; filename=%s.txt", nameWithoutExt)
+	fmt.Println(attachment)
+
+	w.Header().Set("Content-Disposition", attachment)
+	w.Header().Set("Content-Length", string(len))
+	w.Header().Set("Content-Type", "text/plain")
+
+	//send the file
+
+	w.Write([]byte("TESTESTSET"))
+
+}
+
+func createFileToSendToClient(s string) (*os.File, int64) {
+	// create the file
+	file, err := os.Create("finalres.txt")
+
+	// write the OCR results to the file
+	b := []byte(s)
+	err = ioutil.WriteFile("finalres.txt", b, 0644)
+	check(err)
+
+	fmt.Println("wrote the final .txt file, nice!")
+
+	f, err := file.Stat()
+	len := f.Size()
+	check(err)
+
+	// return the *os.File and its length
+
+	return file, len
 }
