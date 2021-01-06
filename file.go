@@ -3,17 +3,41 @@ package main
 import (
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 )
+
+const (
+	host = "localhost"
+	port = "8000"
+)
+
+func main() {
+	StartServer()
+}
+
+func StartServer() {
+	http.HandleFunc("/file", serve)
+	fmt.Printf("server started at %s\n", host+":"+port)
+	log.Fatal(http.ListenAndServe("localhost:8000", nil))
+}
 
 func catch(err error) {
 	if err != nil {
 		fmt.Println(err)
 		panic(err)
 	}
+}
+
+func serve(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("enter serve")
+	f, err := os.Open("test.txt")
+	catch(err)
+	ServeFile(w, r, f)
 }
 
 func ServeFile(writer http.ResponseWriter, request *http.Request, file *os.File) {
@@ -24,6 +48,8 @@ func ServeFile(writer http.ResponseWriter, request *http.Request, file *os.File)
 	// the first 512 bytes is the header.
 	fileHeader := make([]byte, 512)
 	_, err := file.Read(fileHeader) // File offset is now len(fileHeader)
+	fileType := http.DetectContentType(fileHeader)
+
 	if err != nil {
 		catch(err)
 	}
@@ -41,13 +67,14 @@ func ServeFile(writer http.ResponseWriter, request *http.Request, file *os.File)
 	// For example, if you click a link to an image, the browser will pop up the download dialog
 	// box compared to drawing the image in the browser tab.
 	writer.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s""`, fileInfo.Name()))
-
 	// A must for every request that has a body (see RFC 2616 section 7.2.1)
-	writer.Header().Set("Content-Type", http.DetectContentType(fileHeader))
+	// writer.Header().Set("Content-Type", http.DetectContentType(fileHeader))
 
-	// Tell the client we accept ranges, this gives clients the option to pause the transfer
+	writer.Header().Set("Content-Type", fileType)
+
 	// and pick up later where they left up. Or download managers to establish multiple connections
-	writer.Header().Set("Accept-Ranges", "bytes")
+	// Tell the client we accept ranges, this gives clients the option to pause the transfer
+	// writer.Header().Set("Accept-Ranges", "bytes")
 
 	// Check if the client requests a range from the file (see RFC 7233 section 4.2)
 	requestRange := request.Header.Get("range")
@@ -61,12 +88,16 @@ func ServeFile(writer http.ResponseWriter, request *http.Request, file *os.File)
 		// to 0 starting from the beginning of the the file (the 0 in the second argument)
 		file.Seek(0, 0)
 
+		fmt.Println("filename path: ", filepath.Ext(fileInfo.Name()))
+
 		// Stream the file to the client
 		io.Copy(writer, file)
 
 	}
 
-	// Client requests a part of the file
+	// fmt.Println("requst range second part")
+
+	// Client requests a part of the file, this shouldn't happen tho
 
 	// Decode the request header to integers we can use for offset
 	requestRange = requestRange[6:] // Strip the "bytes=", left over is now "begin-end"
@@ -104,8 +135,8 @@ func ServeFile(writer http.ResponseWriter, request *http.Request, file *os.File)
 	// 'Content-Range' : 'bytes begin-end/totalFileSize'
 	writer.Header().Set("Content-Range",
 		fmt.Sprintf("bytes %d-%d/%d", begin, end, fileInfo.Size()))
-
 	// Response http status code 206
+
 	writer.WriteHeader(http.StatusPartialContent)
 
 	// Set the file offset to the requested beginning

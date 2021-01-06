@@ -9,7 +9,6 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
-	"time"
 )
 
 const (
@@ -17,9 +16,22 @@ const (
 	port     = "8000"
 	OS_READ  = 04
 	OS_WRITE = 02
+	TXT      = 1
+	PDF      = 2
 )
 
+var format int
+
 func main() {
+	if len(os.Args) > 1 {
+		switch os.Args[1] {
+		case "txt":
+			format = TXT
+		case "pdf":
+			format = PDF
+		}
+	}
+
 	StartServer()
 }
 
@@ -85,29 +97,10 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 	var wg sync.WaitGroup
 	// channel of all the OCR results.
 	resc := make(chan string)
-	for range items {
-		// for _, item := range items
-		//	imageFile, err := os.Open("uploads/" + item.Name())
-		//	check(err)
-
-		// image assumed to be a .jpg. if its not, this will break
-		//	img, err := jpeg.Decode(imageFile)
-		//	check(err)
-
-		// fmt.Println("image decoded")
-		// jpeg.Encode(w, img, nil)
-
+	for _, item := range items {
 		fmt.Println("doing OCR")
 		wg.Add(1)
-
-		// simulate some work in a goroutine
-		go func() {
-			defer wg.Done()
-			time.Sleep(1 * time.Second)
-			resc <- "ديقج  سقةسد ماسدةق يقشع ثد كظ فظ}{ ث"
-		}()
-
-		// go DetectText("uploads/"+item.Name(), &wg, resc)
+		go DetectText("uploads/"+item.Name(), &wg, resc)
 	}
 
 	// wait for goroutines to finish
@@ -124,14 +117,21 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 	for str := range resc {
 		b.WriteString(str)
 	}
+
 	// put OCR results in a .txt file and return the *os.File object
-	clientFile := createFileToSendToClient(b.String())
+	clientFileTxt := createFileToSendToClient(b.String())
+	// if we want to send client a .pdf file
+	if format == PDF {
+		// conver the  .txt file into a pdf, and get the pdf file, this uses headless chrome , see pdf.go
+		convertedPDFFile := ConvertTextToPDF(clientFileTxt)
+		// serve the file to the client
+		ServeFile(w, r, convertedPDFFile)
+	} else {
+		// .txt
+		ServeFile(w, r, clientFileTxt)
+	}
 
-	// conver the  .txt file into a pdf, and get the pdf file
-	convertedPDFFile := ConvertTextToPDF(clientFile)
-
-	// serve the file to the client
-	ServeFile(w, r, convertedPDFFile)
+	// we are done :)
 }
 
 func createFileToSendToClient(s string) *os.File {
