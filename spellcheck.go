@@ -14,3 +14,9 @@ func ApplyAllah(s string) string {
 		return "الله"
 	}
 }
+
+func ApplyRasul(s string) string {
+	if s == "رشل" {
+		return "رسل"
+	}
+}

@@ -60,7 +60,7 @@ func ocr_dir(file string) {
 	for _, name := range list {
 		var filePath = path + "/" + name
 		p(filePath)
-		detectText(filePath, f)
+		go detectText(filePath, f)
 	}
 }
 
