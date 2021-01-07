@@ -27,11 +27,15 @@ func main() {
 	}
 	switch mode := fi.Mode(); {
 	case mode.IsDir():
+		p("dir found")
 		ocr_dir(name)
 	case mode.IsRegular():
 		// single file
 		//		detectText(name)
 	}
+}
+func p(s string) {
+	fmt.Println(s)
 }
 
 func ocr_dir(file string) {
@@ -45,6 +49,7 @@ func ocr_dir(file string) {
 
 	f, err := os.Create("output.txt")
 	defer f.Close()
+
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -54,7 +59,8 @@ func ocr_dir(file string) {
 	list, _ := dir.Readdirnames(0)
 	for _, name := range list {
 		var filePath = path + "/" + name
-		go detectText(filePath, f)
+		p(filePath)
+		detectText(filePath, f)
 	}
 }
 
@@ -67,8 +73,14 @@ func detectText(file string, f *os.File) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	// open the image
+	fimage, err := os.Open(file)
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
 
-	image, err := vision.NewImageFromReader(f)
+	image, err := vision.NewImageFromReader(fimage)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -93,7 +105,7 @@ func detectText(file string, f *os.File) {
 		}
 	}
 
-	output := strings.Join(outputString, " ")
+	output := strings.Join(outputString, "\n")
 
 	// sync file i/o
 	mutex.Lock()
@@ -103,7 +115,4 @@ func detectText(file string, f *os.File) {
 	}
 	mutex.Unlock()
 
-	if err != nil {
-		fmt.Println(err)
-	}
 }
