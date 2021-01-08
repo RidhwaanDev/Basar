@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"sort"
 	"strings"
 	"sync"
 )
@@ -57,11 +58,17 @@ func ocr_dir(file string) {
 
 	defer dir.Close()
 	list, _ := dir.Readdirnames(0)
+	var fileNames []string
 	for _, name := range list {
-		var filePath = path + "/" + name
+		filePath := path + "/" + name
+		fileNames = append(fileNames, filePath)
 		p(filePath)
 		go detectText(filePath, f)
 	}
+
+	// sort fileNames
+	sort.Strings(fileNames)
+
 }
 
 // writes to output.txt
