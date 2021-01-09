@@ -9,14 +9,12 @@ func ParseText(s string) string {
 
 }
 
-func ApplyAllah(s string) string {
-	if s == "ال له" {
-		return "الله"
-	}
+func ApplyRule(s string) string {
+	switch s {
+	case "ال له":
+		return "الله" 
+	case "رشل":
+		return "رسل"
+        }
 }
 
-func ApplyRasul(s string) string {
-	if s == "رشل" {
-		return "رسل"
-	}
-}
