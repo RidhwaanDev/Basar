@@ -20,14 +20,18 @@ const (
 	PDF      = 2
 )
 
-var format int
-
 func main() {
 	if len(os.Args) > 1 {
 		switch os.Args[1] {
 		case "txt":
 			format = TXT
 		case "pdf":
+			format = PDF
+		case "png":
+			format = PNG
+		case "jpg":
+			format = JPG
+		default:
 			format = PDF
 		}
 	}
