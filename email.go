@@ -11,17 +11,17 @@ import (
 // smtp uses TCP protocl underneath
 
 func main() {
-	from := "ridhwaan.any@gmail.com"
-	password := "mypass"
+	from := "khaliddjerome@gmail.com"
+	password := "sowhatman12"
 	to := []string{
-		"noorsyed1a@gmail.com",
+		"ridhwaan.any@gmail.com",
 	}
 
 	smtpHost := "smtp.gmail.com"
 	smtpPort := "587"
 	auth := smtp.PlainAuth("", from, password, smtpHost)
 
-	message := []byte("This is a test email message.")
+	message := []byte("shutff")
 
 	err := smtp.SendMail(smtpHost+":"+smtpPort, auth, from, to, message)
 	if err != nil {
