@@ -4,8 +4,10 @@ import (
 	vision "cloud.google.com/go/vision/apiv1"
 	"context"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 )
@@ -58,5 +60,17 @@ func DetectText(file string, wg *sync.WaitGroup, resc chan<- string) (string, er
 	}
 
 	output := strings.Join(outputString, "\n")
+
+	writeToResult(file, output)
+
 	return output, nil
+}
+
+// write each OCR result in its own file and put it in into the results directory
+func writeToResult(filename string, result string) {
+	fname, _ := filepath.Split(filename)
+	err := ioutil.WriteFile("results/"+fname, []byte(result), 0666)
+	if err != nil {
+		fmt.Println(err)
+	}
 }

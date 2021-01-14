@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
+	//	"strings"
 	"sync"
 )
 
@@ -24,22 +24,17 @@ type upload struct {
 	name     string
 	contact  string
 	madrasah string
-	filedata nil
 }
+
+var format string = "hello"
 
 func main() {
 	if len(os.Args) > 1 {
 		switch os.Args[1] {
 		case "txt":
-			format = TXT
+			format = "TXT"
 		case "pdf":
-			format = PDF
-		case "png":
-			format = PNG
-		case "jpg":
-			format = JPG
-		default:
-			format = PDF
+			format = "PDF"
 		}
 	}
 
@@ -61,7 +56,7 @@ func check(err error) {
 }
 
 // the only file type supported (as of now) is .pdf
-// user should upload a single .pdf -> convert into images -> do ocr -> send .pdf bacl
+// user should upload a single .pdf -> convert into images -> do ocr -> send .pdf back
 func handleUpload(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("file upload endpoint hit")
 	r.ParseMultipartForm(10 << 20)
@@ -95,7 +90,6 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 
 	// convert pdf to a bunch of images and put them in the uploads directory
 	ConvertPDFToImages()
-
 	// ConvertPDFToImages() puts a bunch of temp images in uploads, dir be sure to clean them out
 	defer CleanUpUploadsFolder()
 
@@ -103,15 +97,20 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Println(err)
 	}
-	// for each image, spawn a gorotuine to do OCR on it. Manage all these gorutines with
+	// for each image, spawn a gorotuine to do OCR on it. Manage all these goroutines with
 	// a waitgroup
 	var wg sync.WaitGroup
 	// channel of all the OCR results.
 	resc := make(chan string)
+	var i int = 0
 	for _, item := range items {
 		fmt.Println("doing OCR")
 		wg.Add(1)
 		go DetectText("uploads/"+item.Name(), &wg, resc)
+		i++
+		if i == 3 {
+			break
+		}
 	}
 
 	// wait for goroutines to finish
@@ -120,28 +119,43 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 		close(resc)
 	}()
 
-	// string builder for all the OCR results
-	var b strings.Builder
-	b.Grow(100)
+	//// string builder for all the OCR results
+	//var b strings.Builder
+	//b.Grow(100)
 
-	// iter chan of OCR results
-	for str := range resc {
-		b.WriteString(str)
+	//// iter chan of OCR results
+	for range resc {
+		fmt.Println("got result from goroutine")
 	}
 
-	// put OCR results in a .txt file and return the *os.File object
-	clientFileTxt := createFileToSendToClient(b.String())
-	// if we want to send client a .pdf file
-	if format == PDF {
-		// conver the  .txt file into a pdf, and get the pdf file, this uses headless chrome , see pdf.go
-		convertedPDFFile := ConvertTextToPDF(clientFileTxt)
-		// serve the file to the client
-		ServeFile(w, r, convertedPDFFile)
-	} else {
-		// .txt
-		ServeFile(w, r, clientFileTxt)
-	}
+	fmt.Println("ALL DONE")
+	fmt.Println("ALL DONE")
+	fmt.Println("ALL DONE")
+	fmt.Println("ALL DONE")
+	fmt.Println("ALL DONE")
+	fmt.Println("ALL DONE")
+	fmt.Println("ALL DONE")
+	fmt.Println("ALL DONE")
+	fmt.Println("ALL DONE")
+	fmt.Println("ALL DONE")
+	fmt.Println("ALL DONE")
+	fmt.Println("ALL DONE")
+	fmt.Println("ALL DONE")
+	fmt.Println("ALL DONE")
+	fmt.Println("ALL DONE")
 
+	//	// put OCR results in a .txt file and return the *os.File object
+	//	clientFileTxt := createFileToSendToClient(b.String())
+	//	// if we want to send client a .pdf file
+	//	if format == PDF {
+	//		// conver the  .txt file into a pdf, and get the pdf file, this uses headless chrome , see pdf.go
+	//		convertedPDFFile := ConvertTextToPDF(clientFileTxt)
+	//		// serve the file to the client
+	//		ServeFile(w, r, convertedPDFFile)
+	//	} else {
+	//		// .txt
+	//		ServeFile(w, r, clientFileTxt)
+	//	}
 	// we are done :)
 }
 

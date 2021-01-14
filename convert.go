@@ -15,7 +15,7 @@ func ConvertPDFToImages() {
 	// convert -density 150 input_file.pdf -quality 100 output_file.jpg
 	prg := "convert"
 	arg1 := "-density"
-	val1 := "150"
+	val1 := "360"
 	arg2 := "pdf_to_convert.pdf"
 	arg3 := "-quality"
 	val3 := "100"
@@ -41,7 +41,7 @@ func moveToUploadsDir() {
 	if err != nil {
 		fmt.Println(err)
 	}
-
+	// this needs to be more foolprof
 	for _, item := range items {
 		if filepath.Ext(item.Name()) == ".jpg" {
 			// fmt.Println(item.Name())

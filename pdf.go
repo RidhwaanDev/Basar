@@ -24,18 +24,11 @@ const (
 	filename = "input.txt"
 )
 
-//func main() {
-//	file, err := os.Create("input.txt")
-//	defer os.Remove("input.txt")
-//
-//	data := "هيعشف هيشغج شهرغج فذلجة هاسلثعف ةىچآشد غ لثقشهدنبدصزخ،مصذ نغ"
-//	check(err)
-//	err = ioutil.WriteFile("input.txt", []byte(data), 0666)
-//	ConvertTextToPDF(file)
-//}
+func main() {
+}
 
 // headless chrome lol
-func ConvertTextToPDF(file *os.File) *os.File {
+func ConvertTextFileToPDF(file *os.File) *os.File {
 	// chrome --headless --disable-gpu --print-to-pdf input.txt
 	info, _ := file.Stat()
 	defer os.Remove(info.Name())
