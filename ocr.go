@@ -68,9 +68,10 @@ func DetectText(file string, wg *sync.WaitGroup, resc chan<- string) (string, er
 
 // write each OCR result in its own file and put it in into the results directory
 func writeToResult(filename string, result string) {
-	fname, _ := filepath.Split(filename)
-	err := ioutil.WriteFile("results/"+fname, []byte(result), 0666)
+	_, fname := filepath.Split(filename)
+	fmt.Println(fname)
+	err := ioutil.WriteFile("results/"+fname+".txt", []byte(result), 0666)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Printf("error in writeToResult %s\n", err)
 	}
 }

@@ -102,17 +102,13 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 	var wg sync.WaitGroup
 	// channel of all the OCR results.
 	resc := make(chan string)
-	var i int = 0
 	for _, item := range items {
 		fmt.Println("doing OCR")
 		wg.Add(1)
 		go DetectText("uploads/"+item.Name(), &wg, resc)
-		i++
-		if i == 3 {
-			break
-		}
 	}
 
+	//	defer CleanUpResultsFolder()
 	// wait for goroutines to finish
 	go func() {
 		wg.Wait()
@@ -124,24 +120,10 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 	//b.Grow(100)
 
 	//// iter chan of OCR results
-	for range resc {
-		fmt.Println("got result from goroutine")
+	for str := range resc {
+		fmt.Println(str)
 	}
 
-	fmt.Println("ALL DONE")
-	fmt.Println("ALL DONE")
-	fmt.Println("ALL DONE")
-	fmt.Println("ALL DONE")
-	fmt.Println("ALL DONE")
-	fmt.Println("ALL DONE")
-	fmt.Println("ALL DONE")
-	fmt.Println("ALL DONE")
-	fmt.Println("ALL DONE")
-	fmt.Println("ALL DONE")
-	fmt.Println("ALL DONE")
-	fmt.Println("ALL DONE")
-	fmt.Println("ALL DONE")
-	fmt.Println("ALL DONE")
 	fmt.Println("ALL DONE")
 
 	//	// put OCR results in a .txt file and return the *os.File object
