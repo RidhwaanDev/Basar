@@ -29,10 +29,6 @@ type upload struct {
 var format string = "hello"
 
 func main() {
-	ioutil.Writ
-}
-
-func main() {
 	if len(os.Args) > 1 {
 		switch os.Args[1] {
 		case "txt":
