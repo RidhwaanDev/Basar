@@ -19,7 +19,7 @@ func ConvertPDFToImages() {
 	arg2 := "pdf_to_convert.pdf"
 	arg3 := "-quality"
 	val3 := "100"
-	arg4 := "output_file.jpg"
+	arg4 := ".jpg"
 
 	cmd := exec.Command(prg, arg1, val1, arg2, arg3, val3, arg4)
 	var out bytes.Buffer
