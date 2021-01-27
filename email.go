@@ -12,7 +12,7 @@ import (
 
 func main() {
 	from := "khaliddjerome@gmail.com"
-	password := "sowhatman12"
+	password := ""
 	to := []string{
 		"ridhwaan.any@gmail.com",
 	}
