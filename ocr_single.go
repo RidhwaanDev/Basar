@@ -121,5 +121,4 @@ func detectText(file string, f *os.File) {
 		log.Println(err)
 	}
 	mutex.Unlock()
-
 }

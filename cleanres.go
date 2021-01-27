@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -11,8 +12,25 @@ import (
 	"strings"
 )
 
-// remove everything from results dir
-func main() {
+func removeEmptyLines() {
+	file, err := os.Open("final_output.txt")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		fmt.Println(scanner.Text())
+	}
+
+	if err := scanner.Err(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+// final_output.txt
+func createFinalOutputTextFile() {
 	items, err := ioutil.ReadDir("results")
 
 	names := make([]string, 1)
@@ -43,6 +61,8 @@ func main() {
 	finalTextFile, err := os.OpenFile("final_output.txt",
 		os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 
+	defer finalTextFile.Close()
+
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -66,8 +86,11 @@ func main() {
 		if err != nil {
 			fmt.Println("error in writing the bytes to the output file")
 		} else {
-			fmt.Printf("%d bytes written to %s", n, names[i]+".txt")
+			// fmt.Printf("%d bytes written to %s", n, names[i]+".txt")
 		}
+		outFile.Close()
 	}
+
+	removeEmptyLines()
 
 }
