@@ -13,6 +13,7 @@ import (
 
 // sync file i/o
 var mutex = &sync.Mutex{}
+var cnt int = 0
 
 func main() {
 	if len(os.Args) <= 1 {
@@ -31,6 +32,8 @@ func main() {
 		p("dir found")
 		ocr_dir(name)
 	case mode.IsRegular():
+		p("normal file")
+		detectText(name)
 		// single file
 		//		detectText(name)
 	}
@@ -63,7 +66,7 @@ func ocr_dir(file string) {
 		filePath := path + "/" + name
 		fileNames = append(fileNames, filePath)
 		p(filePath)
-		go detectText(filePath, f)
+		// go detectText(filePath, f)
 	}
 
 	// sort fileNames
@@ -72,7 +75,7 @@ func ocr_dir(file string) {
 }
 
 // writes to output.txt
-func detectText(file string, f *os.File) {
+func detectText(file string) {
 	fmt.Printf("detecting text in %s\n", file)
 	ctx := context.Background()
 
@@ -113,12 +116,14 @@ func detectText(file string, f *os.File) {
 	}
 
 	output := strings.Join(outputString, "\n")
+	fmt.Println(output)
 
 	// sync file i/o
 	mutex.Lock()
+	cnt++
 	// write the OCR results to the file
-	if _, err := f.WriteString(output); err != nil {
-		log.Println(err)
-	}
+	//	if _, err := f.WriteString(output); err != nil {
+	//		log.Println(err)
+	//	}
 	mutex.Unlock()
 }
