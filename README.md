@@ -1,5 +1,5 @@
 # ArabicOCR
 
-Convert Arabic documents to clickable Arabic text in Google Docs, MS Word, PDF.
+Convert an Arabic pdf to a clickable PDF 
 
 scanpdf.app
