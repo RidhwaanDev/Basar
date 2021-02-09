@@ -1,4 +1,4 @@
-module github.com/RidhwaanDev/ArabicOCR
+module github.com/RidhwaanDev/ArabicOCR/src
 
 go 1.15
 

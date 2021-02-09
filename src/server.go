@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	//	"strings"
 	"sync"
 )
 
@@ -55,10 +54,8 @@ func check(err error) {
 	}
 }
 
-// the only file type supported (as of now) is .pdf
-// user should upload a single .pdf -> convert into images -> do ocr -> send .pdf back
+// uses uploads a pdf -> gets a pdf back in Arabic
 func handleUpload(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("file upload endpoint hit")
 	r.ParseMultipartForm(10 << 20)
 
 	file, handler, err := r.FormFile("myFile")
@@ -89,8 +86,8 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 	check(e)
 
 	// convert pdf to a bunch of images and put them in the uploads directory
-	ConvertPDFToImages()
 	// ConvertPDFToImages() puts a bunch of temp images in uploads, dir be sure to clean them out
+	ConvertPDFToImages()
 	defer CleanUpUploadsFolder()
 
 	items, err := ioutil.ReadDir("uploads")
