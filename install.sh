@@ -7,7 +7,7 @@ mkdir results
 export GOOGLE_APPLICATION_CREDENTIALS="*.json"
 
 # install convert 
-brew install imagemagick
+# brew install imagemagick
 
 # install headless chrome
-brew install chrome
+# brew install chrome

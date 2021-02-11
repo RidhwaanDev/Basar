@@ -1,6 +1,7 @@
 *json
 /images
 /uploads
+/expirements
 *.png
 *.jpg
 *.pdf
