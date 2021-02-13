@@ -28,7 +28,7 @@ func ConvertPDFToImages() {
 	cmd.Stderr = &stderr
 	err := cmd.Run()
 	if err != nil {
-		fmt.Println("an error in convert" + "   " + stderr.String())
+		fmt.Println("an error in ConvertPDFToImages()" + "   " + stderr.String())
 		log.Fatal(err)
 	} else {
 		moveToUploadsDir()
