@@ -26,6 +26,7 @@ func DetectText(file string, wg *sync.WaitGroup, resc chan<- string) (string, er
 
 	f, err := os.Open(file)
 	if err != nil {
+		fmt.Println("error in opening file ocr")
 		log.Fatal(err)
 		return "", err
 	}
@@ -54,7 +55,7 @@ func DetectText(file string, wg *sync.WaitGroup, resc chan<- string) (string, er
 			cnt++
 			// the first line is the ocr of the entire document
 			outputString = append(outputString, annotation.Description)
-			// fmt.Println(outputString)
+			fmt.Println(outputString)
 			resc <- strings.Join(outputString, "\n")
 			break
 		}

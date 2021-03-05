@@ -15,7 +15,7 @@ func ConvertPDFToImages() {
 	// convert -density 150 input_file.pdf -quality 100 output_file.jpg
 	prg := "convert"
 	arg1 := "-density"
-	val1 := "360"
+	val1 := "300"
 	arg2 := "pdf_to_convert.pdf"
 	arg3 := "-quality"
 	val3 := "100"
@@ -31,6 +31,7 @@ func ConvertPDFToImages() {
 		fmt.Println("an error in ConvertPDFToImages()" + "   " + stderr.String())
 		log.Fatal(err)
 	} else {
+		// fmt.Println("moving converted images to upload dir")
 		moveToUploadsDir()
 	}
 }
@@ -41,7 +42,7 @@ func moveToUploadsDir() {
 	if err != nil {
 		fmt.Println(err)
 	}
-	// this needs to be more foolprof
+	// this needs to be more foolproof
 	for _, item := range items {
 		if filepath.Ext(item.Name()) == ".jpg" {
 			// fmt.Println(item.Name())

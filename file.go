@@ -10,30 +10,12 @@ import (
 	"strings"
 )
 
-//
-// func main() {
-// 	StartServer()
-// }
-//
-// func StartServer() {
-// 	http.HandleFunc("/file", serve)
-// 	fmt.Printf("server started at %s\n", host+":"+port)
-// 	log.Fatal(http.ListenAndServe("localhost:8000", nil))
-// }
-//
 func catch(err error) {
 	if err != nil {
 		fmt.Println(err)
 		panic(err)
 	}
 }
-
-// func serve(w http.ResponseWriter, r *http.Request) {
-// 	fmt.Println("enter serve")
-// 	f, err := os.Open("test.txt")
-// 	catch(err)
-// 	ServeFile(w, r, f)
-// }
 
 func ServeFile(writer http.ResponseWriter, request *http.Request, file *os.File) {
 	fmt.Println("func ServeFile	 in file.go")

@@ -41,7 +41,8 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fmt.Println("error getting the file")
 		fmt.Println(err)
-		panic(err)
+		// panic(err)
+		return
 	}
 
 	defer file.Close()
@@ -65,7 +66,7 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 	check(e)
 
 	// convert pdf to a bunch of images and put them in the uploads directory
-	// ConvertPDFToImages() puts a bunch of temp images in uploads, dir be sure to clean them out
+	// ConvertPDFToImages() puts a bunch of temp images in the uploads dir be sure to clean them out
 	ConvertPDFToImages()
 	defer CleanUpUploadsFolder()
 
@@ -79,7 +80,7 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 	// channel of all the OCR results.
 	resc := make(chan string)
 	for _, item := range items {
-		fmt.Println("doing OCR")
+		fmt.Printf("doing OCR on item: %s\n", item.Name())
 		wg.Add(1)
 		go DetectText("uploads/"+item.Name(), &wg, resc)
 	}
@@ -91,14 +92,10 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 		close(resc)
 	}()
 
-	//// string builder for all the OCR results
-	//var b strings.Builder
-	//b.Grow(100)
-
 	//// iter chan of OCR results
-	for str := range resc {
-		fmt.Println(str)
-	}
+	// for str := range resc {
+	// 	// fmt.Println(str)
+	// }
 
 	fmt.Println("END")
 	//	// put OCR results in a .txt file and return the *os.File object
