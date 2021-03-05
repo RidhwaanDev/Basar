@@ -1,6 +1,6 @@
-# ArabicOCR
+# ArabicOCR - بصر
 
-Convert an Arabic pdf to a clickable PDF 
+Extract text from scanned Arabic PDF. 
 
 # Steps to test on macOS/OSX
 
