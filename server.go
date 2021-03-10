@@ -7,41 +7,15 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	//	"strings"
 	"sync"
 )
 
 const (
-	host     = "localhost"
-	port     = "8000"
-	OS_READ  = 04
-	OS_WRITE = 02
-	TXT      = 1
-	PDF      = 2
+	host = "localhost"
+	port = "8000"
 )
 
-type upload struct {
-	name     string
-	contact  string
-	madrasah string
-}
-
-var format string = "hello"
-
 func main() {
-	ioutil.Writ
-}
-
-func main() {
-	if len(os.Args) > 1 {
-		switch os.Args[1] {
-		case "txt":
-			format = "TXT"
-		case "pdf":
-			format = "PDF"
-		}
-	}
-
 	StartServer()
 }
 
@@ -59,17 +33,16 @@ func check(err error) {
 	}
 }
 
-// the only file type supported (as of now) is .pdf
-// user should upload a single .pdf -> convert into images -> do ocr -> send .pdf back
+// uses uploads a pdf -> gets a pdf back in Arabic
 func handleUpload(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("file upload endpoint hit")
 	r.ParseMultipartForm(10 << 20)
 
 	file, handler, err := r.FormFile("myFile")
 	if err != nil {
 		fmt.Println("error getting the file")
 		fmt.Println(err)
-		panic(err)
+		// panic(err)
+		return
 	}
 
 	defer file.Close()
@@ -93,8 +66,8 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 	check(e)
 
 	// convert pdf to a bunch of images and put them in the uploads directory
+	// ConvertPDFToImages() puts a bunch of temp images in the uploads dir be sure to clean them out
 	ConvertPDFToImages()
-	// ConvertPDFToImages() puts a bunch of temp images in uploads, dir be sure to clean them out
 	defer CleanUpUploadsFolder()
 
 	items, err := ioutil.ReadDir("uploads")
@@ -107,7 +80,7 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 	// channel of all the OCR results.
 	resc := make(chan string)
 	for _, item := range items {
-		fmt.Println("doing OCR")
+		// fmt.Printf("doing OCR on item: %s\n", item.Name())
 		wg.Add(1)
 		go DetectText("uploads/"+item.Name(), &wg, resc)
 	}
@@ -119,17 +92,10 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 		close(resc)
 	}()
 
-	//// string builder for all the OCR results
-	//var b strings.Builder
-	//b.Grow(100)
+	finalOutputTextFile := CreateFinalOutputTextFile()
 
-	//// iter chan of OCR results
-	for str := range resc {
-		fmt.Println(str)
-	}
-
-	fmt.Println("ALL DONE")
-
+	//serve the file to the he user
+	ServeFile(w, r, finalOutputTextFile)
 	//	// put OCR results in a .txt file and return the *os.File object
 	//	clientFileTxt := createFileToSendToClient(b.String())
 	//	// if we want to send client a .pdf file

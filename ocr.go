@@ -14,7 +14,7 @@ import (
 
 func DetectText(file string, wg *sync.WaitGroup, resc chan<- string) (string, error) {
 	defer wg.Done()
-	fmt.Printf("detecting text in %s\n", file)
+	// fmt.Printf("detecting text in %s\n", file)
 	ctx := context.Background()
 
 	client, err := vision.NewImageAnnotatorClient(ctx)
