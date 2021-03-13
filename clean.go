@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"os"
 	"path"
 	"sort"
@@ -43,14 +45,14 @@ func CleanUpResultsFolder() {
 }
 
 // final_output.txt
-func CreateFinalOutputTextFile() *os.File {
+func createFinalOutputTextFile() {
 	items, err := ioutil.ReadDir("results")
+
 	names := make([]string, 1)
 	if err != nil {
 		fmt.Println(err)
 	}
 	var itemCount int
-	// iterate .txt file of resuts
 	for _, item := range items {
 		itemCount++
 		trimmed := strings.Trim(item.Name(), path.Ext(item.Name()))
@@ -84,8 +86,6 @@ func CreateFinalOutputTextFile() *os.File {
 
 	// read all the data from the output files and put them into final_output.txt
 	for i := 0; i <= itemCount; i++ {
-
-		// open one of the files with the OCR results
 		outFile, err := os.Open("results/" + names[i] + ".txt")
 
 		if err != nil {
@@ -109,4 +109,5 @@ func CreateFinalOutputTextFile() *os.File {
 		outFile.Close()
 	}
 	return f
+
 }

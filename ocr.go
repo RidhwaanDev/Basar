@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path"
 	"path/filepath"
 	//"strings"
 	"sync"
@@ -53,6 +54,7 @@ func DetectText(fileName string, wg *sync.WaitGroup, resc chan<- map[string]stri
 	fmt.Println("Opening file: " + fileName)
 	f, err := os.Open(fileName)
 	if err != nil {
+		fmt.Println("error in opening file ocr")
 		log.Fatal(err)
 		return "", err
 	}
@@ -104,8 +106,8 @@ func DetectText(fileName string, wg *sync.WaitGroup, resc chan<- map[string]stri
 // write each OCR result in its own file and put it in into the results directory
 func writeToResult(filename string, result string) {
 	_, fname := filepath.Split(filename)
-	fmt.Println(fname)
-	err := ioutil.WriteFile("results/"+fname+".txt", []byte(result), 0666)
+	filenameFinal := strings.TrimSuffix(fname, path.Ext(fname))
+	err := ioutil.WriteFile("results/"+filenameFinal+".txt", []byte(result), 0666)
 	if err != nil {
 		fmt.Printf("error in writeToResult %s\n", err)
 	}
