@@ -2,8 +2,8 @@
 
 #make results folder
 
-#export GOOGLE_APP creds
+export GOOGLE_APPLICATION_CREDENTIALS=arabic-ocr-300518-21703af3623e.json
 
-# install convert 
+# install convert/imagemagick
 
 # install headless chrome

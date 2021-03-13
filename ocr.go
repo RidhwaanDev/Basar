@@ -8,13 +8,40 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"strings"
+	//"strings"
 	"sync"
 )
 
-func DetectText(file string, wg *sync.WaitGroup, resc chan<- string) (string, error) {
+// for each image, spawn a gorotuine to do OCR on it. Manage all these goroutines with
+func Ocr() {
+	items, err := ioutil.ReadDir("uploads")
+	check(err)
+	// a waitgroup
+	var wg sync.WaitGroup
+	// channel of all the OCR results.
+	resc := make(chan map[string]string)
+	for _, item := range items {
+		wg.Add(1)
+		// fmt.Println(item.Name())
+		go DetectText("uploads/"+item.Name(), &wg, resc)
+	}
+	//	defer CleanUpResultsFolder()
+	// wait for goroutines to finish
+	go func() {
+		wg.Wait()
+		close(resc)
+	}()
+
+	for str := range resc {
+		for key, val := range str {
+			fmt.Println(key + " " + val)
+		}
+	}
+}
+
+func DetectText(fileName string, wg *sync.WaitGroup, resc chan<- map[string]string) (string, error) {
 	defer wg.Done()
-	// fmt.Printf("detecting text in %s\n", file)
+
 	ctx := context.Background()
 
 	client, err := vision.NewImageAnnotatorClient(ctx)
@@ -23,7 +50,8 @@ func DetectText(file string, wg *sync.WaitGroup, resc chan<- string) (string, er
 		return "", err
 	}
 
-	f, err := os.Open(file)
+	fmt.Println("Opening file: " + fileName)
+	f, err := os.Open(fileName)
 	if err != nil {
 		log.Fatal(err)
 		return "", err
@@ -31,14 +59,18 @@ func DetectText(file string, wg *sync.WaitGroup, resc chan<- string) (string, er
 
 	defer f.Close()
 
+	// don't use a file. maybe keep an io.Reader in memory somewhere?
+	// TODO check performance diff in memory vs reading from a file
 	image, err := vision.NewImageFromReader(f)
 	if err != nil {
+		check(err)
 		log.Fatal(err)
 		return "", err
 	}
 
 	annotations, err := client.DetectTexts(ctx, image, nil, 10)
 	if err != nil {
+		check(err)
 		log.Fatal(err)
 		return "", err
 	}
@@ -51,19 +83,22 @@ func DetectText(file string, wg *sync.WaitGroup, resc chan<- string) (string, er
 		// fmt.Fprintln(w, "Text:")
 		for _, annotation := range annotations {
 			cnt++
+			// TODO useful for line by line transcription
 			// the first line is the ocr of the entire document
 			outputString = append(outputString, annotation.Description)
 			// fmt.Println(outputString)
-			resc <- strings.Join(outputString, "\n")
+			// resc <- strings.Join(outputString, "\n")
+			// resc <- outputString
+			fileNameToText := make(map[string]string)
+			fileNameToText[fileName] = annotation.Description
+			resc <- fileNameToText
 			break
 		}
 	}
 
-	output := strings.Join(outputString, "\n")
+	// writeToResult(fileName, output)
 
-	writeToResult(file, output)
-
-	return output, nil
+	return "test", nil
 }
 
 // write each OCR result in its own file and put it in into the results directory

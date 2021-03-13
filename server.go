@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"sync"
+	"strings"
 )
 
 const (
@@ -19,9 +19,18 @@ func main() {
 	StartServer()
 }
 
+func printenv() {
+	envs := os.Environ()
+	for _, a := range envs {
+		str := strings.Split(a, "=")
+		fmt.Printf("%s = %s\n", str[0], str[1])
+	}
+}
+
 func StartServer() {
 	http.HandleFunc("/upload", handleUpload)
 	fmt.Printf("server started at %s\n", host+":"+port)
+	// 	printenv()
 	log.Fatal(http.ListenAndServe("localhost:8000", nil))
 }
 
@@ -68,34 +77,17 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 	// convert pdf to a bunch of images and put them in the uploads directory
 	// ConvertPDFToImages() puts a bunch of temp images in the uploads dir be sure to clean them out
 	ConvertPDFToImages()
-	defer CleanUpUploadsFolder()
+	// do the actual ocr
+	Ocr()
 
-	items, err := ioutil.ReadDir("uploads")
-	if err != nil {
-		fmt.Println(err)
-	}
-	// for each image, spawn a gorotuine to do OCR on it. Manage all these goroutines with
-	// a waitgroup
-	var wg sync.WaitGroup
-	// channel of all the OCR results.
-	resc := make(chan string)
-	for _, item := range items {
-		// fmt.Printf("doing OCR on item: %s\n", item.Name())
-		wg.Add(1)
-		go DetectText("uploads/"+item.Name(), &wg, resc)
-	}
+	//	CleanUpUploadsFolder()
 
-	//	defer CleanUpResultsFolder()
-	// wait for goroutines to finish
-	go func() {
-		wg.Wait()
-		close(resc)
-	}()
-
-	finalOutputTextFile := CreateFinalOutputTextFile()
+	fmt.Println("we are done")
+	// finalOutputTextFile := CreateFinalOutputTextFile()
+	// CreateFinalOutputTextFile()
 
 	//serve the file to the he user
-	ServeFile(w, r, finalOutputTextFile)
+	// 	ServeFile(w, r, finalOutputTextFile)
 	//	// put OCR results in a .txt file and return the *os.File object
 	//	clientFileTxt := createFileToSendToClient(b.String())
 	//	// if we want to send client a .pdf file

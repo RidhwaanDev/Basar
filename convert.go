@@ -26,6 +26,7 @@ func ConvertPDFToImages() {
 	var stderr bytes.Buffer
 	cmd.Stdout = &out
 	cmd.Stderr = &stderr
+	// waits for command to complete
 	err := cmd.Run()
 	if err != nil {
 		fmt.Println("an error in convert" + "   " + stderr.String())
@@ -41,10 +42,10 @@ func moveToUploadsDir() {
 	if err != nil {
 		fmt.Println(err)
 	}
+
 	// this needs to be more foolprof
 	for _, item := range items {
 		if filepath.Ext(item.Name()) == ".jpg" {
-			// fmt.Println(item.Name())
 			os.Rename(item.Name(), "uploads/"+item.Name())
 		}
 	}

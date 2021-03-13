@@ -84,23 +84,27 @@ func CreateFinalOutputTextFile() *os.File {
 
 	// read all the data from the output files and put them into final_output.txt
 	for i := 0; i <= itemCount; i++ {
+
+		// open one of the files with the OCR results
 		outFile, err := os.Open("results/" + names[i] + ".txt")
 
 		if err != nil {
 			fmt.Println("error in opening the results file")
 		}
 
+		// read the byes from the outfile
 		bytes, err := ioutil.ReadAll(outFile)
 		if err != nil {
 			fmt.Println("error in reading the bytes from output file")
 		}
 
+		// write the bytes of hte ocr result to the final text file
 		n, err := io.WriteString(f, string(bytes))
 
 		if err != nil {
 			fmt.Println("error in writing the bytes to the final output file")
 		} else {
-			fmt.Printf("%d bytes written to %s", n, names[i]+".txt")
+			fmt.Printf("%d bytes written to %s\n", n, names[i]+".txt")
 		}
 		outFile.Close()
 	}
