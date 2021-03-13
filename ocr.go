@@ -99,7 +99,6 @@ func DetectText(fileName string, wg *sync.WaitGroup, resc chan<- map[string]stri
 	}
 
 	// writeToResult(fileName, output)
-
 	return "test", nil
 }
 

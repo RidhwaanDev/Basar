@@ -83,24 +83,6 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 	//	CleanUpUploadsFolder()
 
 	fmt.Println("we are done")
-	// finalOutputTextFile := CreateFinalOutputTextFile()
-	// CreateFinalOutputTextFile()
-
-	//serve the file to the he user
-	// 	ServeFile(w, r, finalOutputTextFile)
-	//	// put OCR results in a .txt file and return the *os.File object
-	//	clientFileTxt := createFileToSendToClient(b.String())
-	//	// if we want to send client a .pdf file
-	//	if format == PDF {
-	//		// conver the  .txt file into a pdf, and get the pdf file, this uses headless chrome , see pdf.go
-	//		convertedPDFFile := ConvertTextToPDF(clientFileTxt)
-	//		// serve the file to the client
-	//		ServeFile(w, r, convertedPDFFile)
-	//	} else {
-	//		// .txt
-	//		ServeFile(w, r, clientFileTxt)
-	//	}
-	// we are done :)
 }
 
 func createFileToSendToClient(s string) *os.File {
