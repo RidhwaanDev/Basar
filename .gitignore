@@ -1,0 +1,9 @@
+*.json
+/images
+/uploads
+/expirements
+*.png
+*.jpg
+*.jpeg
+*.pdf
+*.txt
