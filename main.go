@@ -32,6 +32,8 @@ func hash(s string) string {
 
 const BUCKET_NAME = "basar-ocr-pdf-storage"
 
+// get names of OCR result from  GCS1
+// this function is used to download from the GCS
 func getNamesOfOCRResult(prefix string) []string {
 	query := &storage.Query{Prefix: prefix}
 
@@ -64,33 +66,12 @@ func getNamesOfOCRResult(prefix string) []string {
 	return names
 }
 
-func main() {
-	if len(os.Args) <= 1 {
-		log.Fatal("please support filename")
-	}
-
-	fileName := os.Args[1]
-	fileNameId := hash(fileName)
-
-	files, err := ioutil.ReadDir("./")
-	if err != nil {
-		log.Fatal(err)
-	}
-	var list []string
-	for _, f := range files {
-		if filepath.Ext(f.Name()) == ".json" && strings.Contains(f.Name(), fileNameId) {
-			// fmt.Println(f.Name())
-			list = append(list, f.Name())
-		}
-	}
-
-	fmt.Println(len(list))
-
+func getResultsInOrder(count int, fileNameId string) []string {
 	// print it order
 
 	var sortedList []string
 	i := 1
-	for i < len(list)*2 {
+	for i < count*2 {
 		p := fmt.Sprintf("%s-Resultoutput-%d-to-%d.json", fileNameId, i, i+1)
 		// if the file does not exist, try fixing it since there may be odd pages, else break
 		if _, err := os.Stat(p); os.IsNotExist(err) {
@@ -107,12 +88,32 @@ func main() {
 		i += 2
 	}
 
-	for _, n := range sortedList {
-		fmt.Println(n)
+	return sortedList
+
+}
+
+func getJSONResultFiles(fileNameId string) []string {
+	files, err := ioutil.ReadDir("./")
+	if err != nil {
+		log.Fatal(err)
+	}
+	var list []string
+	for _, f := range files {
+		if filepath.Ext(f.Name()) == ".json" && strings.Contains(f.Name(), fileNameId) {
+			// fmt.Println(f.Name())
+			list = append(list, f.Name())
+		}
+	}
+	return list
+}
+
+func main() {
+	if len(os.Args) <= 1 {
+		log.Fatal("please support filename")
 	}
 
-	os.Exit(1)
-	// fmt.Printf("file name id hash %s\n", fileNameId)
+	fileName := os.Args[1]
+	fileNameId := hash(fileName)
 
 	// upload the file to do OCR on it
 	if err := UploadFile(&buf, fileNameId, fileName); err != nil {
@@ -125,26 +126,34 @@ func main() {
 	src := fmt.Sprintf("gs://basar-ocr-pdf-storage/%s", fileNameId)
 	des := fmt.Sprintf("gs://basar-ocr-pdf-storage/%s%s", fileNameId, "-Result")
 
+	fmt.Println("doing OCR")
 	// detect OCR in the file we just uploaded in the OCR-Result directory
-	err = DetectAsyncDocumentURI(&buf, src, des)
+	err := DetectAsyncDocumentURI(&buf, src, des)
 	if err != nil {
 		fmt.Printf("Error in OCR: %s", err)
 	}
+	fmt.Println("OCR done !")
 
+	// OCR is done, now download the JSON result fiels from GOogle Cloud Storage
+	// TODO will goroutines make this faster?
+	fmt.Println("dowloading files!")
 	fileNames := getNamesOfOCRResult(fileNameId)
 	for _, item := range fileNames {
 		downloadFile(&buf, item)
 	}
+	fmt.Println("finished downloading!")
 
-	// bytes, err := downloadFile(&buf)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
-
-	// err = ioutil.WriteFile("gsresult.pdf", bytes, 0666)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
+	// collect the names of the downloaded JSON files in order
+	jsonFileNames := getJSONResultFiles(fileNameId)
+	jsonFileNamesOrdered := getResultsInOrder(len(jsonFileNames), fileNameId)
+	// parse each json file
+	for _, jsonFileName := range jsonFileNamesOrdered {
+		textResult := ParseJSONFile(jsonFileName)
+		for i := range textResult {
+			fmt.Println(textResult[0])
+			fmt.Println(textResult[1])
+		}
+	}
 }
 
 // detectAsyncDocumentURI performs Optical Character Recognition (OCR) on a
