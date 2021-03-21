@@ -10,7 +10,9 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"cloud.google.com/go/storage"
@@ -69,6 +71,47 @@ func main() {
 
 	fileName := os.Args[1]
 	fileNameId := hash(fileName)
+
+	files, err := ioutil.ReadDir("./")
+	if err != nil {
+		log.Fatal(err)
+	}
+	var list []string
+	for _, f := range files {
+		if filepath.Ext(f.Name()) == ".json" && strings.Contains(f.Name(), fileNameId) {
+			// fmt.Println(f.Name())
+			list = append(list, f.Name())
+		}
+	}
+
+	fmt.Println(len(list))
+
+	// print it order
+
+	var sortedList []string
+	i := 1
+	for i < len(list)*2 {
+		p := fmt.Sprintf("%s-Resultoutput-%d-to-%d.json", fileNameId, i, i+1)
+		// if the file does not exist, try fixing it since there may be odd pages, else break
+		if _, err := os.Stat(p); os.IsNotExist(err) {
+			// if it does not exist, must mean we are at the end, try fix if even pages n-to-n not n-to-n+1
+			pFixed := fmt.Sprintf("%s-Resultoutput-%d-to-%d.json", fileNameId, i, i)
+			if _, err := os.Stat(pFixed); os.IsNotExist(err) {
+				break
+			}
+			sortedList = append(sortedList, pFixed)
+			break
+		}
+
+		sortedList = append(sortedList, p)
+		i += 2
+	}
+
+	for _, n := range sortedList {
+		fmt.Println(n)
+	}
+
+	os.Exit(1)
 	// fmt.Printf("file name id hash %s\n", fileNameId)
 
 	// upload the file to do OCR on it
@@ -83,7 +126,7 @@ func main() {
 	des := fmt.Sprintf("gs://basar-ocr-pdf-storage/%s%s", fileNameId, "-Result")
 
 	// detect OCR in the file we just uploaded in the OCR-Result directory
-	err := DetectAsyncDocumentURI(&buf, src, des)
+	err = DetectAsyncDocumentURI(&buf, src, des)
 	if err != nil {
 		fmt.Printf("Error in OCR: %s", err)
 	}
