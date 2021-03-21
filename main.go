@@ -1,10 +1,13 @@
-// Sample vision-quickstart uses the Google Cloud Vision API to label an image.
 package main
 
 import (
 	"bytes"
+	"cloud.google.com/go/storage"
+	vision "cloud.google.com/go/vision/apiv1"
 	"context"
 	"fmt"
+	"google.golang.org/api/iterator"
+	visionpb "google.golang.org/genproto/googleapis/cloud/vision/v1"
 	"hash/fnv"
 	"io"
 	"io/ioutil"
@@ -14,11 +17,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"cloud.google.com/go/storage"
-	vision "cloud.google.com/go/vision/apiv1"
-	"google.golang.org/api/iterator"
-	visionpb "google.golang.org/genproto/googleapis/cloud/vision/v1"
 )
 
 var buf bytes.Buffer
@@ -107,13 +105,15 @@ func getJSONResultFiles(fileNameId string) []string {
 	return list
 }
 
-func main() {
-	if len(os.Args) <= 1 {
-		log.Fatal("please support filename")
-	}
+func DoOCR(uploadedPDFName string, uploadedPDFBytes []byte) string {
+	start := time.Now()
 
-	fileName := os.Args[1]
-	fileNameId := hash(fileName)
+	fileNameId := hash(uploadedPDFName)
+
+	fileName := fmt.Sprintf("%s-to-convert.pdf", fileNameId)
+	// create the file remember to remove it
+	ioutil.WriteFile(fileName, uploadedPDFBytes, 0644)
+	defer os.Remove(fileName)
 
 	// upload the file to do OCR on it
 	if err := UploadFile(&buf, fileNameId, fileName); err != nil {
@@ -147,13 +147,28 @@ func main() {
 	jsonFileNames := getJSONResultFiles(fileNameId)
 	jsonFileNamesOrdered := getResultsInOrder(len(jsonFileNames), fileNameId)
 	// parse each json file
+	finalTextFileName := fmt.Sprintf("%s.txt", fileNameId)
+
+	f, err := os.Create(finalTextFileName)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	defer f.Close()
+
 	for _, jsonFileName := range jsonFileNamesOrdered {
 		textResult := ParseJSONFile(jsonFileName)
 		for i := range textResult {
-			fmt.Println(textResult[0])
-			fmt.Println(textResult[1])
+			f.WriteString(textResult[i])
+			fmt.Println(textResult[i])
 		}
 	}
+
+	deleteAllObjects(fileNameId)
+
+	elapsed := time.Since(start)
+	log.Printf("Finished everything after %s", elapsed)
+	return finalTextFileName
 }
 
 // detectAsyncDocumentURI performs Optical Character Recognition (OCR) on a
@@ -188,7 +203,7 @@ func DetectAsyncDocumentURI(w io.Writer, gcsSourceURI, gcsDestinationURI string)
 		},
 	}
 
-	fmt.Println("making request")
+	fmt.Println("making async annoate request")
 	operation, err := client.AsyncBatchAnnotateFiles(ctx, request)
 	if err != nil {
 		return err
@@ -240,37 +255,6 @@ func UploadFile(w io.Writer, fileNameHash string, localfileName string) error {
 	return nil
 }
 
-// func downloadOCRResults() ([]byte, error) {
-// 	itemsToDownload := getNamesOfOCRResult()
-// 	ctx := context.Background()
-// 	client, err := storage.NewClient(ctx)
-// 	if err != nil {
-// 		return nil, fmt.Errorf("storage.NewClient: %v", err)
-// 	}
-// 	defer client.Close()
-//
-// 	ctx, cancel := context.WithTimeout(ctx, time.Second*50)
-// 	defer cancel()
-// 	for _, object := range itemsToDownload {
-// 		rc, err := client.Bucket(BUCKET_NAME).Object(object).NewReader(ctx)
-// 		if err != nil {
-// 			return nil, fmt.Errorf("Object(%q).NewReader: %v", object, err)
-// 		}
-// 		defer rc.Close()
-//
-// 		data, err := ioutil.ReadAll(rc)
-// 		if err != nil {
-// 			return nil, fmt.Errorf("ioutil.ReadAll: %v", err)
-// 		}
-// 		fmt.Fprintf(w, "Blob %v downloaded.\n", object)
-// 		err := ioutil.WriteFile(object, data, 666)
-// 		if err != nil {
-// 			fmt.Println(err)
-// 		}
-// 	}
-// 	return nil
-// }
-//
 // downloadFile downloads an object.
 func downloadFile(w io.Writer, object string) {
 	bucket := "basar-ocr-pdf-storage"
@@ -302,5 +286,28 @@ func downloadFile(w io.Writer, object string) {
 	if err != nil {
 		fmt.Printf("ioutil.WriteFile: %v", err)
 	}
+}
 
+func deleteAllObjects(prefix string) {
+	query := &storage.Query{Prefix: prefix}
+	ctx := context.Background()
+	client, err := storage.NewClient(ctx)
+	if err != nil {
+		// TODO: handle error.
+	}
+	bucket := client.Bucket(BUCKET_NAME)
+	it := bucket.Objects(ctx, query)
+	for {
+		objAttrs, err := it.Next()
+		if err != nil && err != iterator.Done {
+			fmt.Printf("deleteAllObjects iterator error %v\n", err)
+		}
+		if err == iterator.Done {
+			break
+		}
+		if err := bucket.Object(objAttrs.Name).Delete(ctx); err != nil {
+			fmt.Printf("deleteAllObjects delete error %v\n", err)
+		}
+	}
+	fmt.Println("deleted all object items in the bucket specified.")
 }
