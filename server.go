@@ -11,11 +11,6 @@ import (
 	"strconv"
 )
 
-const (
-	host = "localhost"
-	port = "8000"
-)
-
 func main() {
 	StartServer()
 }
