@@ -21,7 +21,9 @@ func main() {
 }
 
 func StartServer() {
+	http.Handle("/", http.FileServer(http.Dir("./static")))
 	http.HandleFunc("/upload", handleUpload)
+
 	fmt.Printf("server started at %s\n", host+":"+port)
 	// 	printenv()
 	log.Fatal(http.ListenAndServe("localhost:8000", nil))

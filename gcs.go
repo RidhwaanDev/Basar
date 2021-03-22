@@ -1,5 +1,6 @@
 package main
 
+// Google Cloud Storage api
 import (
 	"bytes"
 	"cloud.google.com/go/storage"
@@ -73,7 +74,7 @@ func getResultsInOrder(count int, fileNameId string) []string {
 		p := fmt.Sprintf("%s-Resultoutput-%d-to-%d.json", fileNameId, i, i+1)
 		// if the file does not exist, try fixing it since there may be odd pages, else break
 		if _, err := os.Stat(p); os.IsNotExist(err) {
-			// if it does not exist, must mean we are at the end, try fix if even pages n-to-n not n-to-n+1
+			// if it does not exist, must mean we are at the end, try fix if odd pages => n-to-n not n-to-n+1
 			pFixed := fmt.Sprintf("%s-Resultoutput-%d-to-%d.json", fileNameId, i, i)
 			if _, err := os.Stat(pFixed); os.IsNotExist(err) {
 				break
@@ -87,7 +88,6 @@ func getResultsInOrder(count int, fileNameId string) []string {
 	}
 
 	return sortedList
-
 }
 
 func getJSONResultFiles(fileNameId string) []string {
@@ -156,6 +156,7 @@ func DoOCR(uploadedPDFName string, uploadedPDFBytes []byte) string {
 
 	defer f.Close()
 
+	// TODO goroutine
 	for _, jsonFileName := range jsonFileNamesOrdered {
 		textResult := ParseJSONFile(jsonFileName)
 		for i := range textResult {
@@ -167,7 +168,7 @@ func DoOCR(uploadedPDFName string, uploadedPDFBytes []byte) string {
 	deleteAllObjects(fileNameId)
 
 	elapsed := time.Since(start)
-	log.Printf("Finished everything after %s", elapsed)
+	log.Printf("time elapsed: %s\n", elapsed)
 	return finalTextFileName
 }
 
