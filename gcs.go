@@ -17,6 +17,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -109,11 +110,11 @@ func DoOCR(uploadedPDFName string, uploadedPDFBytes []byte) string {
 	start := time.Now()
 
 	fileNameId := hash(uploadedPDFName)
+	// we are gonna download a bunch of JSON files. delete them at the end
 
 	fileName := fmt.Sprintf("%s-to-convert.pdf", fileNameId)
 	// create the file remember to remove it
 	ioutil.WriteFile(fileName, uploadedPDFBytes, 0644)
-	defer os.Remove(fileName)
 
 	// upload the file to do OCR on it
 	if err := UploadFile(&buf, fileNameId, fileName); err != nil {
@@ -135,12 +136,21 @@ func DoOCR(uploadedPDFName string, uploadedPDFBytes []byte) string {
 	fmt.Println("OCR done !")
 
 	// OCR is done, now download the JSON result fiels from GOogle Cloud Storage
-	// TODO will goroutines make this faster?
 	fmt.Println("dowloading files!")
 	fileNames := getNamesOfOCRResult(fileNameId)
+
+	var wg sync.WaitGroup
+
 	for _, item := range fileNames {
-		downloadFile(&buf, item)
+		wg.Add(1)
+		go downloadFile(&buf, item)
+
 	}
+	// wait for goroutines to finish
+	go func() {
+		wg.Wait()
+	}()
+
 	fmt.Println("finished downloading!")
 
 	// collect the names of the downloaded JSON files in order
@@ -165,10 +175,12 @@ func DoOCR(uploadedPDFName string, uploadedPDFBytes []byte) string {
 		}
 	}
 
+	// delet all GCS ojbects
 	deleteAllObjects(fileNameId)
 
 	elapsed := time.Since(start)
 	log.Printf("time elapsed: %s\n", elapsed)
+	// return the final text file we just wrote to disk
 	return finalTextFileName
 }
 

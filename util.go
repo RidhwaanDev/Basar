@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
+	"strings"
 )
 
 // ocr result
@@ -41,4 +43,19 @@ func ParseJSONFile(fileName string) []string {
 		strList = append(strList, result.Responses[i].FullTextAnnotation.Text)
 	}
 	return strList
+}
+
+func CleanDownloadedFiles(prefix string) {
+	files, err := ioutil.ReadDir("./")
+	if err != nil {
+		log.Fatal(err)
+	}
+	for _, f := range files {
+		if strings.HasPrefix(f.Name(), prefix) {
+			err := os.Remove(f.Name())
+			if err != nil {
+				fmt.Println(err)
+			}
+		}
+	}
 }

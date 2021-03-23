@@ -109,4 +109,8 @@ func serveFile(writer http.ResponseWriter, request *http.Request, fileName strin
 		fmt.Println("filename path: ", filepath.Ext(fileInfo.Name()))
 		io.Copy(writer, file)
 	}
+	// move filePath parsing into function
+	extension := filepath.Ext(fileName)
+	name := fileName[0 : len(fileName)-len(extension)]
+	CleanDownloadedFiles(name)
 }
