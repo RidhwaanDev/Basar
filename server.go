@@ -19,7 +19,12 @@ func StartServer() {
 	http.Handle("/", http.FileServer(http.Dir("./static")))
 	http.HandleFunc("/upload", handleUpload)
 
+	os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", "arabic-ocr-300518-e2c236268e78.json")
+
 	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8000"
+	}
 
 	fmt.Printf("server started at %s\n", ":"+port)
 
