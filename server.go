@@ -20,13 +20,10 @@ func StartServer() {
 	http.HandleFunc("/upload", handleUpload)
 
 	port := os.Getenv("PORT")
-	if len(port) == 0 {
-		port = "8000"
-	}
-	hostAndPort := fmt.Sprintf(":%s", port)
-	fmt.Printf("server started at %s\n", host+":"+port)
 
-	log.Fatal(http.ListenAndServe(hostAndPort, nil))
+	fmt.Printf("server started at %s\n", ":"+port)
+
+	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
 
 // check errors
