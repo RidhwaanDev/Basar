@@ -216,18 +216,18 @@ func DetectAsyncDocumentURI(w io.Writer, gcsSourceURI, gcsDestinationURI string)
 		},
 	}
 
-	fmt.Println("making async annoate request")
+	fmt.Println("making async annoate request, this will take a while")
 	operation, err := client.AsyncBatchAnnotateFiles(ctx, request)
 	if err != nil {
 		return err
 	}
 
-	fmt.Fprintf(w, "Waiting for the operation to finish.")
-
 	resp, err := operation.Wait(ctx)
 	if err != nil {
 		return err
 	}
+
+	fmt.Println("async annotate request completed , OCR is done")
 
 	fmt.Fprintf(w, "%v", resp)
 	fmt.Println(buf.String())
