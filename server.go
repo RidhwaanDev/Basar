@@ -28,7 +28,7 @@ func StartServer() {
 
 	fmt.Printf("server started at %s\n", ":"+port)
 
-	log.Fatal(http.ListenAndServe(":"+port, nil))
+	log.Fatal(http.ListenAndServe("localhost:8000", nil))
 }
 
 // check errors

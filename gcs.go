@@ -218,19 +218,33 @@ func DetectAsyncDocumentURI(w io.Writer, gcsSourceURI, gcsDestinationURI string)
 
 	fmt.Println("making async annoate request, this will take a while")
 	operation, err := client.AsyncBatchAnnotateFiles(ctx, request)
-	if err != nil {
-		return err
+
+	// keep polling until we are done.
+	for {
+		pollResp, err := operation.Poll(ctx)
+		if err != nil {
+			fmt.Errorf("opeartion.Poll %v", err)
+			// return err
+		}
+		if operation.Done() && pollResp == nil {
+			fmt.Println("operation done but pollResp is nil. idk why")
+		}
+		if operation.Done() && pollResp != nil {
+			// OCR is done and we have our response
+			fmt.Println("async annotate request completed , OCR is done")
+			fmt.Fprintf(w, "%v", pollResp)
+			fmt.Println(buf.String())
+			// actual progres
+		} else if !operation.Done() {
+			meta, err := operation.Metadata()
+			if err != nil {
+				fmt.Printf("op.MetaData %v", err)
+				return err
+			}
+			fmt.Printf("Current Status: \t %+v\n", meta)
+
+		}
 	}
-
-	resp, err := operation.Wait(ctx)
-	if err != nil {
-		return err
-	}
-
-	fmt.Println("async annotate request completed , OCR is done")
-
-	fmt.Fprintf(w, "%v", resp)
-	fmt.Println(buf.String())
 
 	return nil
 }
