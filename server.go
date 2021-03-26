@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -18,6 +19,7 @@ func main() {
 func StartServer() {
 	http.Handle("/", http.FileServer(http.Dir("./static")))
 	http.HandleFunc("/upload", handleUpload)
+	http.HandleFunc("/checkTicket", handleTicketCheck)
 
 	os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", "arabic-ocr-300518-e2c236268e78.json")
 
@@ -32,6 +34,13 @@ func StartServer() {
 }
 
 // check errors
+func catch(err error) {
+	if err != nil {
+		fmt.Printf("error in %s\n", err)
+		panic(err)
+	}
+}
+
 func check(err error) {
 	if err != nil {
 		fmt.Printf("error in %s\n", err)
@@ -39,11 +48,34 @@ func check(err error) {
 	}
 }
 
-func catch(err error) {
-	if err != nil {
-		fmt.Printf("error in %s\n", err)
-		panic(err)
+func handleTicketCheck(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("ticket check....")
+	id, ok := r.URL.Query()["id"]
+
+	if !ok || len(id[0]) < 1 {
+		log.Println("Url Param 'id' is missing")
+		return
 	}
+	fmt.Println(id[0])
+	job := GetJob(id[0])
+	if job == nil {
+		fmt.Println("ticket is invalid")
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	resp := &ClientUpdate{Status: 0}
+
+	switch job.JobStatus {
+	case 0: // waiting
+		resp.Status = 0
+	case 1: // running
+		resp.Status = 1
+	case 2: // done
+		resp.Status = 2
+		// serve fle to client here
+	}
+	json.NewEncoder(w).Encode(resp)
 }
 
 // uses uploads a pdf -> gets a pdf back in Arabic
@@ -76,14 +108,18 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 	check(err)
 
 	// Okay pdf file is uploaded. now return success to user and submit the job into redis queue
-	freshJob := Job{JobStatus: 0, FileName: handler.Filename, FileData: fileBytes}
+	freshJob := Job{JobStatus: 1, FileName: handler.Filename, FileData: fileBytes}
 	jobID := GenRandomID() // uuid
 	fmt.Println("submitting job")
 	SubmitJob(jobID, freshJob)
 
-	fmt.Println("getting job")
-	test := GetJob(jobID)
-	fmt.Printf("%s : %s\n", jobID, test.FileName)
+	fmt.Println("sending ticket to client")
+	ticket := &Ticket{
+		Id:       jobID,
+		FileName: handler.Filename,
+	}
+
+	json.NewEncoder(w).Encode(ticket)
 
 	return
 

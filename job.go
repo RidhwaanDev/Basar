@@ -13,6 +13,15 @@ type Job struct {
 	FileData  []byte
 }
 
+type ClientUpdate struct {
+	Status int
+}
+
+type Ticket struct {
+	Id       string
+	FileName string
+}
+
 var ctx = context.Background()
 var rdb *redis.Client
 
