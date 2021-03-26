@@ -27,7 +27,12 @@
 												formData.append("myFile", file);
 												//upload file
 												fetch('http://localhost:8000/upload', {method: "POST", body: formData, headers:headers})
-																.then(response => console.log(response.json()))
+																.then(response =>  {
+																			let obj = response.json().then(data => {
+																							let id = data['Id'];
+																							setInterval(function(){ alert("Hello"); }, 3000);
+																				})
+																})
 								}
                   
 				</script>
