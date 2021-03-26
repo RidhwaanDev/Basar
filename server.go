@@ -81,6 +81,7 @@ func handleTicketCheck(w http.ResponseWriter, r *http.Request) {
 // uses uploads a pdf -> gets a pdf back in Arabic
 func handleUpload(w http.ResponseWriter, r *http.Request) {
 	r.ParseMultipartForm(10 << 20)
+	enableCors(&w)
 
 	file, handler, err := r.FormFile("myFile")
 	if err != nil {
@@ -107,7 +108,7 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 	fileBytes, err := ioutil.ReadAll(file)
 	check(err)
 
-	// Okay pdf file is uploaded. now return success to user and submit the job into redis queue
+	// Okay pdf file is uploaded to disk. now send ticket to user with job ID and submit the job into redis
 	freshJob := Job{JobStatus: 1, FileName: handler.Filename, FileData: fileBytes}
 	jobID := GenRandomID() // uuid
 	fmt.Println("submitting job")
@@ -131,6 +132,9 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 	//	name := resultTextFileName[0 : len(resultTextFileName)-len(extension)]
 	//	serveFile(w, r, resultTextFileName)
 	//	CleanDownloadedFiles(name)
+}
+func enableCors(w *http.ResponseWriter) {
+	(*w).Header().Set("Access-Control-Allow-Origin", "*")
 }
 
 func serveFile(writer http.ResponseWriter, request *http.Request, fileName string) {
