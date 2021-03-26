@@ -170,6 +170,7 @@ func DoOCR(uploadedPDFName string, uploadedPDFBytes []byte) string {
 	for _, jsonFileName := range jsonFileNamesOrdered {
 		textResult := ParseJSONFile(jsonFileName)
 		for i := range textResult {
+			fmt.Println(textResult[i])
 			f.WriteString(textResult[i])
 			fmt.Println(textResult[i])
 		}
@@ -234,6 +235,7 @@ func DetectAsyncDocumentURI(w io.Writer, gcsSourceURI, gcsDestinationURI string)
 			fmt.Println("async annotate request completed , OCR is done")
 			fmt.Fprintf(w, "%v", pollResp)
 			fmt.Println(buf.String())
+			break
 			// actual progres
 		} else if !operation.Done() {
 			meta, err := operation.Metadata()
@@ -244,6 +246,7 @@ func DetectAsyncDocumentURI(w io.Writer, gcsSourceURI, gcsDestinationURI string)
 			fmt.Printf("Current Status: \t %+v\n", meta)
 
 		}
+		time.Sleep(500 * time.Millisecond)
 	}
 
 	return nil

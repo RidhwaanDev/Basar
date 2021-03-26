@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/google/uuid"
 	"io/ioutil"
 	"log"
 	"os"
@@ -43,6 +44,10 @@ func ParseJSONFile(fileName string) []string {
 		strList = append(strList, result.Responses[i].FullTextAnnotation.Text)
 	}
 	return strList
+}
+
+func GenRandomID() string {
+	return uuid.NewString()
 }
 
 func CleanDownloadedFiles(prefix string) {

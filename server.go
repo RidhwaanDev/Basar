@@ -66,7 +66,8 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 
 	// check that they uploaded a pdf
 	if filepath.Ext(handler.Filename) != ".pdf" {
-		fmt.Println("YOU DIDN'T UPLOAD A PDF")
+		fmt.Println("YOU DIDN'T UPLOAD A PDF, exiting")
+		return
 	}
 
 	// read all of the contents of our uploaded file into a
@@ -74,9 +75,26 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 	fileBytes, err := ioutil.ReadAll(file)
 	check(err)
 
-	resultTextFileName := DoOCR(handler.Filename, fileBytes)
-	// ....wait
-	serveFile(w, r, resultTextFileName)
+	// Okay pdf file is uploaded. now return success to user and submit the job into redis queue
+	freshJob := Job{JobStatus: 0, FileName: handler.Filename, FileData: fileBytes}
+	jobID := GenRandomID() // uuid
+	fmt.Println("submitting job")
+	SubmitJob(jobID, freshJob)
+
+	fmt.Println("getting job")
+	test := GetJob(jobID)
+	fmt.Printf("%s : %s\n", jobID, test.FileName)
+
+	return
+
+	//
+	//	resultTextFileName := DoOCR(handler.Filename, fileBytes)
+	//	fmt.Printf("resultTextFileName %s\n", resultTextFileName)
+	//	// ....wait
+	//	extension := filepath.Ext(resultTextFileName)
+	//	name := resultTextFileName[0 : len(resultTextFileName)-len(extension)]
+	//	serveFile(w, r, resultTextFileName)
+	//	CleanDownloadedFiles(name)
 }
 
 func serveFile(writer http.ResponseWriter, request *http.Request, fileName string) {
@@ -97,7 +115,6 @@ func serveFile(writer http.ResponseWriter, request *http.Request, fileName strin
 	if err != nil {
 		catch(err)
 	}
-
 	writer.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s""`, fileInfo.Name()))
 	writer.Header().Set("Content-Type", fileType)
 	requestRange := request.Header.Get("range")
@@ -110,7 +127,4 @@ func serveFile(writer http.ResponseWriter, request *http.Request, fileName strin
 		io.Copy(writer, file)
 	}
 	// move filePath parsing into function
-	extension := filepath.Ext(fileName)
-	name := fileName[0 : len(fileName)-len(extension)]
-	CleanDownloadedFiles(name)
 }
