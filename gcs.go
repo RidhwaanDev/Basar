@@ -106,7 +106,7 @@ func getJSONResultFiles(fileNameId string) []string {
 	return list
 }
 
-func DoOCR(uploadedPDFName string, uploadedPDFBytes []byte) string {
+func DoOCR(jobID string, uploadedPDFName string, uploadedPDFBytes []byte) string {
 	start := time.Now()
 
 	fileNameId := hash(uploadedPDFName)
@@ -181,7 +181,9 @@ func DoOCR(uploadedPDFName string, uploadedPDFBytes []byte) string {
 
 	elapsed := time.Since(start)
 	log.Printf("time elapsed: %s\n", elapsed)
-	// return the final text file we just wrote to disk
+	// we wrote the result file to disk, now mark the jobb as compclete
+	MarkAsComplete(jobID)
+
 	return finalTextFileName
 }
 

@@ -74,6 +74,7 @@ func handleTicketCheck(w http.ResponseWriter, r *http.Request) {
 	case 2: // done
 		resp.Status = 2
 		// serve fle to client here
+		serveFile(w, r, job.Filename)
 	}
 	json.NewEncoder(w).Encode(resp)
 }
@@ -115,6 +116,7 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 	SubmitJob(jobID, freshJob)
 
 	fmt.Println("sending ticket to client")
+	// ticket for the user
 	ticket := &Ticket{
 		Id:       jobID,
 		FileName: handler.Filename,
@@ -122,12 +124,14 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(ticket)
 
-	return
+	// go do the OCR
+	go DoOCR(jobID, handler.Filename, fileBytes)
 
 	//
 	//	resultTextFileName := DoOCR(handler.Filename, fileBytes)
 	//	fmt.Printf("resultTextFileName %s\n", resultTextFileName)
 	//	// ....wait
+	// get the name of the file without the extension so we can use it in CleanDownloadedFiles
 	//	extension := filepath.Ext(resultTextFileName)
 	//	name := resultTextFileName[0 : len(resultTextFileName)-len(extension)]
 	//	serveFile(w, r, resultTextFileName)

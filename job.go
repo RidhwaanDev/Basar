@@ -47,6 +47,24 @@ func SubmitJob(key string, job Job) error {
 	return nil
 }
 
+func MarkAsComplete(key string) {
+	jobBytes, err := rdb.Get(ctx, key).Bytes()
+	if err == redis.Nil {
+		fmt.Printf("%s does not exist\n", key)
+		return
+	} else if err != nil {
+		panic(err)
+	} else {
+		var someJob Job
+		err := json.Unmarshal(jobBytes, &someJob)
+		if err != nil {
+			panic(err)
+		}
+		someJob.JobStatus = 2
+		SubmitJob(key, someJob)
+	}
+}
+
 func GetJob(key string) *Job {
 	jobBytes, err := rdb.Get(ctx, key).Bytes()
 	if err == redis.Nil {
