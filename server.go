@@ -86,7 +86,7 @@ func handleTicketCheck(w http.ResponseWriter, r *http.Request) {
 // uses uploads a pdf -> gets a pdf back in Arabic
 func handleUpload(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("hit download endpoint")
-	serveFile(w, r, "curl.txt")
+	ServeFile(w, r, "curl.txt")
 	return
 
 	r.ParseMultipartForm(10 << 20)
@@ -134,13 +134,6 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 
 	// go do the OCR and return
 	go DoOCR(jobID, handler.Filename, fileBytes)
-
-	//	// ....wait
-	// get the name of the file without the extension so we can use it in CleanDownloadedFiles
-
-	//	extension := filepath.Ext(resultTextFileName)
-	//	name := resultTextFileName[0 : len(resultTextFileName)-len(extension)]
-	//	defer CleanDownloadedFiles(name)
 }
 func enableCors(w *http.ResponseWriter) {
 	(*w).Header().Set("Access-Control-Allow-Origin", "*")
@@ -175,6 +168,4 @@ func serveFile(writer http.ResponseWriter, request *http.Request, fileName strin
 		// fmt.Println("filename path: ", filepath.Ext(fileInfo.Name()))
 		io.Copy(writer, file)
 	}
-	// move filePath parsing into function
-
 }
