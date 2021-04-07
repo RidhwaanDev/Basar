@@ -106,11 +106,10 @@ func getJSONResultFiles(fileNameId string) []string {
 	return list
 }
 
-func DoOCR(jobID string, uploadedPDFName string, uploadedPDFBytes []byte) string {
+func DoOCR(jobID string, uploadedPDFName string, uploadedPDFBytes []byte) {
 	start := time.Now()
 
 	fileNameId := hash(uploadedPDFName)
-	// we are gonna download a bunch of JSON files. delete them at the end
 
 	fileName := fmt.Sprintf("%s-to-convert.pdf", fileNameId)
 	// create the file remember to remove it
@@ -135,7 +134,7 @@ func DoOCR(jobID string, uploadedPDFName string, uploadedPDFBytes []byte) string
 	}
 	fmt.Println("OCR done !")
 
-	// OCR is done, now download the JSON result fiels from GOogle Cloud Storage
+	// OCR is done, now download the JSON result files from GCS
 	fmt.Println("dowloading files!")
 	fileNames := getNamesOfOCRResult(fileNameId)
 
@@ -152,7 +151,6 @@ func DoOCR(jobID string, uploadedPDFName string, uploadedPDFBytes []byte) string
 	}()
 
 	fmt.Println("finished downloading!")
-
 	// collect the names of the downloaded JSON files in order
 	jsonFileNames := getJSONResultFiles(fileNameId)
 	jsonFileNamesOrdered := getResultsInOrder(len(jsonFileNames), fileNameId)
@@ -166,7 +164,6 @@ func DoOCR(jobID string, uploadedPDFName string, uploadedPDFBytes []byte) string
 
 	defer f.Close()
 
-	// TODO goroutine
 	for _, jsonFileName := range jsonFileNamesOrdered {
 		textResult := ParseJSONFile(jsonFileName)
 		for i := range textResult {
@@ -176,15 +173,16 @@ func DoOCR(jobID string, uploadedPDFName string, uploadedPDFBytes []byte) string
 		}
 	}
 
-	// delet all GCS ojbects
+	// delete all GCS ojbects
 	deleteAllObjects(fileNameId)
 
 	elapsed := time.Since(start)
 	log.Printf("time elapsed: %s\n", elapsed)
 	// we wrote the result file to disk, now mark the jobb as compclete
 	MarkAsComplete(jobID)
-
-	return finalTextFileName
+	extension := filepath.Ext(finalTextFileName)
+	name := finalTextFileName[0 : len(finalTextFileName)-len(extension)]
+	CleanDownloadedFiles(name)
 }
 
 // detectAsyncDocumentURI performs Optical Character Recognition (OCR) on a
@@ -245,6 +243,7 @@ func DetectAsyncDocumentURI(w io.Writer, gcsSourceURI, gcsDestinationURI string)
 				fmt.Printf("op.MetaData %v", err)
 				return err
 			}
+			// fmt.Printf("\r Status: %\t %+v \t/10", meta)
 			fmt.Printf("Current Status: \t %+v\n", meta)
 
 		}

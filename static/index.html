@@ -2,8 +2,7 @@
 <html lang="en">
   <head>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/yanchokraev/grayshift@1.0.0/css/grayshift.min.css" integrity="sha384-GJupCSwpa/5Jlkr/zMNCiBxPP7//lA3VTn0C5aOao0nhGEskGTL19lBzk0eVmfUC" crossorigin="anonymous">
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8" /> <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>Arabic OCR</title>
   </head>
@@ -30,10 +29,31 @@
 																.then(response =>  {
 																			let obj = response.json().then(data => {
 																							let id = data['Id'];
-																							setInterval(function(){ alert("Hello"); }, 3000);
+																							console.log(id)
+																							periodCheck(id)
 																				})
 																})
 								}
+
+					function periodCheck(id){
+									let headers = new Headers();
+									headers.append('Origin','http://localhost:8000');
+									let url = 'http://localhost:8000/checkTicket?' + new URLSearchParams({ id : id})
+
+									setInterval(function(){
+													console.log("checking if job is done")
+									fetch(url, {method: "GET", headers:headers})
+													.then(response => {
+																	let obj = response.json().then(data => {
+																					console.log("response " + JSON.stringify(data))
+																					let status = data['Status'];
+																					if(status == 2){
+																						alert("done")
+																					}
+																	})
+													})
+									}, 3000)
+					}
                   
 				</script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>

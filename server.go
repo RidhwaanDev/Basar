@@ -49,19 +49,20 @@ func check(err error) {
 }
 
 func handleTicketCheck(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("ticket check....")
+	enableCors(&w)
 	id, ok := r.URL.Query()["id"]
 
 	if !ok || len(id[0]) < 1 {
 		log.Println("Url Param 'id' is missing")
 		return
 	}
-	fmt.Println(id[0])
+
 	job := GetJob(id[0])
 	if job == nil {
 		fmt.Println("ticket is invalid")
 		return
 	}
+	// fmt.Printf("ticket check with id: %s", id[0])
 
 	w.Header().Set("Content-Type", "application/json")
 	resp := &ClientUpdate{Status: 0}
@@ -74,7 +75,8 @@ func handleTicketCheck(w http.ResponseWriter, r *http.Request) {
 	case 2: // done
 		resp.Status = 2
 		// serve fle to client here
-		serveFile(w, r, job.Filename)
+		fmt.Println("OCR is done, this is it boys, send it!")
+		serveFile(w, r, job.FileName)
 	}
 	json.NewEncoder(w).Encode(resp)
 }
@@ -124,30 +126,27 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 
 	json.NewEncoder(w).Encode(ticket)
 
-	// go do the OCR
+	// go do the OCR and return
 	go DoOCR(jobID, handler.Filename, fileBytes)
 
-	//
-	//	resultTextFileName := DoOCR(handler.Filename, fileBytes)
-	//	fmt.Printf("resultTextFileName %s\n", resultTextFileName)
 	//	// ....wait
 	// get the name of the file without the extension so we can use it in CleanDownloadedFiles
+
 	//	extension := filepath.Ext(resultTextFileName)
 	//	name := resultTextFileName[0 : len(resultTextFileName)-len(extension)]
-	//	serveFile(w, r, resultTextFileName)
-	//	CleanDownloadedFiles(name)
+	//	defer CleanDownloadedFiles(name)
 }
 func enableCors(w *http.ResponseWriter) {
 	(*w).Header().Set("Access-Control-Allow-Origin", "*")
 }
 
 func serveFile(writer http.ResponseWriter, request *http.Request, fileName string) {
-	fmt.Println("func ServeFile in server.go")
 	file, err := os.Open(fileName)
 	check(err)
 	defer file.Close()
 
 	fileHeader := make([]byte, 512)
+
 	_, err = file.Read(fileHeader) // File offset is now len(fileHeader)
 	fileType := http.DetectContentType(fileHeader)
 
@@ -162,13 +161,14 @@ func serveFile(writer http.ResponseWriter, request *http.Request, fileName strin
 	writer.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s""`, fileInfo.Name()))
 	writer.Header().Set("Content-Type", fileType)
 	requestRange := request.Header.Get("range")
-	fmt.Printf("request range: %s\n", requestRange)
+	// fmt.Printf("request range: %s\n", requestRange)
 
 	if requestRange == "" {
 		writer.Header().Set("Content-Length", strconv.Itoa(int(fileInfo.Size())))
 		file.Seek(0, 0)
-		fmt.Println("filename path: ", filepath.Ext(fileInfo.Name()))
+		// fmt.Println("filename path: ", filepath.Ext(fileInfo.Name()))
 		io.Copy(writer, file)
 	}
 	// move filePath parsing into function
+
 }

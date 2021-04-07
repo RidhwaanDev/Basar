@@ -31,6 +31,8 @@ func init() {
 		Password: "", // no password set
 		DB:       0,  // use default DB
 	})
+
+	// ping redis to make sure its up
 }
 
 // key string, value JSON of job struct
@@ -78,7 +80,7 @@ func GetJob(key string) *Job {
 		if err != nil {
 			panic(err)
 		}
-		fmt.Printf("%s : %v\n", key, finalJob)
+		// fmt.Printf("%s : %v\n", key, finalJob)
 		return &finalJob
 	}
 }
