@@ -76,13 +76,19 @@ func handleTicketCheck(w http.ResponseWriter, r *http.Request) {
 		resp.Status = 2
 		// serve fle to client here
 		fmt.Println("OCR is done, this is it boys, send it!")
-		serveFile(w, r, job.FileName)
+		w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", job.FileName))
+		w.Header().Set("Content-Type", r.Header.Get("Content-Type"))
+		http.ServeFile(w, r, job.FileName)
 	}
 	json.NewEncoder(w).Encode(resp)
 }
 
 // uses uploads a pdf -> gets a pdf back in Arabic
 func handleUpload(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("hit download endpoint")
+	serveFile(w, r, "curl.txt")
+	return
+
 	r.ParseMultipartForm(10 << 20)
 	enableCors(&w)
 

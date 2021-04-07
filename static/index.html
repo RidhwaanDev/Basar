@@ -13,7 +13,6 @@
 								document.getElementById('uploadButton').addEventListener('click', uploadFile);
 
 								function uploadFile(){
-							  
 												let headers = new Headers();
 												headers.append('Origin','http://localhost:8000');
 
@@ -40,7 +39,7 @@
 									headers.append('Origin','http://localhost:8000');
 									let url = 'http://localhost:8000/checkTicket?' + new URLSearchParams({ id : id})
 
-									setInterval(function(){
+									let timer = setInterval(function(){
 													console.log("checking if job is done")
 									fetch(url, {method: "GET", headers:headers})
 													.then(response => {
@@ -49,6 +48,7 @@
 																					let status = data['Status'];
 																					if(status == 2){
 																						alert("done")
+																						clearInterval(timer)
 																					}
 																	})
 													})
