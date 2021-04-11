@@ -16,7 +16,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-	"strings"
+	// "strings"
 	"sync"
 	"time"
 )
@@ -66,9 +66,8 @@ func getNamesOfOCRResult(prefix string) []string {
 	return names
 }
 
-func getResultsInOrder(count int, fileNameId string) []string {
+func getResultsInOrder(count int, fileNameId string) (int, []string) {
 	// print it order
-
 	var sortedList []string
 	i := 1
 	for i < count*2 {
@@ -88,28 +87,29 @@ func getResultsInOrder(count int, fileNameId string) []string {
 		i += 2
 	}
 
-	return sortedList
+	return len(sortedList), sortedList
 }
 
-func getJSONResultFiles(fileNameId string) []string {
+func getJSONResultFiles(fileNameId string) (int, []string) {
 	files, err := ioutil.ReadDir("./")
 	if err != nil {
 		log.Fatal(err)
 	}
 	var list []string
 	for _, f := range files {
-		if filepath.Ext(f.Name()) == ".json" && strings.Contains(f.Name(), fileNameId) {
+		fmt.Printf("%s vs %s\n", f.Name(), fileNameId)
+		if filepath.Ext(f.Name()) == ".json" {
 			// fmt.Println(f.Name())
 			list = append(list, f.Name())
 		}
 	}
-	return list
+	return len(list), list
 }
 
 func DoOCR(jobID string, uploadedPDFName string, uploadedPDFBytes []byte) {
 	start := time.Now()
 
-	fileNameId := hash(uploadedPDFName)
+	fileNameId := jobID
 
 	fileName := fmt.Sprintf("%s-to-convert.pdf", fileNameId)
 	// create the file remember to remove it
@@ -142,18 +142,22 @@ func DoOCR(jobID string, uploadedPDFName string, uploadedPDFBytes []byte) {
 
 	for _, item := range fileNames {
 		wg.Add(1)
-		go downloadFile(&buf, item)
+		go downloadFile(&wg, &buf, item)
 
 	}
 	// wait for goroutines to finish
-	go func() {
-		wg.Wait()
-	}()
+	wg.Wait()
 
 	fmt.Println("finished downloading!")
 	// collect the names of the downloaded JSON files in order
-	jsonFileNames := getJSONResultFiles(fileNameId)
-	jsonFileNamesOrdered := getResultsInOrder(len(jsonFileNames), fileNameId)
+	cnt, jsonFileNames := getJSONResultFiles(fileNameId)
+	if cnt == 0 {
+		fmt.Println("getJSONResultFiles returned 0")
+	}
+	cnt, jsonFileNamesOrdered := getResultsInOrder(len(jsonFileNames), fileNameId)
+	if cnt == 0 {
+		fmt.Println("getResultsInOrder returned 0")
+	}
 	// parse each json file
 	finalTextFileName := fmt.Sprintf("%s.txt", fileNameId)
 
@@ -164,12 +168,12 @@ func DoOCR(jobID string, uploadedPDFName string, uploadedPDFBytes []byte) {
 
 	defer f.Close()
 
+	fmt.Printf("jsonFileNamesORdered size: %d \n", len(jsonFileNamesOrdered))
 	for _, jsonFileName := range jsonFileNamesOrdered {
 		textResult := ParseJSONFile(jsonFileName)
 		for i := range textResult {
-			fmt.Println(textResult[i])
+			// fmt.Printf("TEXT RESULT %s\n", textResult[i])
 			f.WriteString(textResult[i])
-			fmt.Println(textResult[i])
 		}
 	}
 
@@ -177,12 +181,11 @@ func DoOCR(jobID string, uploadedPDFName string, uploadedPDFBytes []byte) {
 	deleteAllObjects(fileNameId)
 
 	elapsed := time.Since(start)
-	log.Printf("time elapsed: %s\n", elapsed)
+	fmt.Printf("time elapsed: %s\n", elapsed)
+	fmt.Printf("finalTextFileName %s\n", finalTextFileName)
 	// we wrote the result file to disk, now mark the jobb as compclete
 	MarkAsComplete(jobID)
-	extension := filepath.Ext(finalTextFileName)
-	name := finalTextFileName[0 : len(finalTextFileName)-len(extension)]
-	CleanDownloadedFiles(name)
+	CleanDownloadedFiles(jobID)
 }
 
 // detectAsyncDocumentURI performs Optical Character Recognition (OCR) on a
@@ -287,7 +290,8 @@ func UploadFile(w io.Writer, fileNameHash string, localfileName string) error {
 }
 
 // downloadFile downloads an object.
-func downloadFile(w io.Writer, object string) {
+func downloadFile(wg *sync.WaitGroup, w io.Writer, object string) {
+	defer wg.Done()
 	bucket := "basar-ocr-pdf-storage"
 	ctx := context.Background()
 	client, err := storage.NewClient(ctx)

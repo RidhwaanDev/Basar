@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -21,6 +22,21 @@ type Response struct {
 
 type Annotation struct {
 	Text string `json:"text"`
+}
+
+func PrintFile(fileName string) {
+	file, err := os.Open(fileName)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() {
+		if err = file.Close(); err != nil {
+			log.Fatal(err)
+		}
+	}()
+
+	b, err := ioutil.ReadAll(file)
+	fmt.Print(string(b))
 }
 
 func ParseJSONFile(fileName string) []string {
@@ -50,13 +66,15 @@ func GenRandomID() string {
 	return uuid.NewString()
 }
 
+func CleanOutFinalResult(fileName string) {}
+
 func CleanDownloadedFiles(prefix string) {
 	files, err := ioutil.ReadDir("./")
 	if err != nil {
 		log.Fatal(err)
 	}
 	for _, f := range files {
-		if strings.HasPrefix(f.Name(), prefix) {
+		if strings.HasPrefix(f.Name(), prefix) && filepath.Ext(f.Name()) != ".txt" {
 			err := os.Remove(f.Name())
 			if err != nil {
 				fmt.Println(err)

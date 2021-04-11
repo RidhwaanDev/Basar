@@ -76,8 +76,8 @@ func handleTicketCheck(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("OCR is done, this is it boys, send it!")
 		w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", job.FileName))
 		w.Header().Set("Content-Type", r.Header.Get("Content-Type"))
-		http.ServeFile(w, r, job.FileName)
-		// ServeFile(w, r, job.FileName)
+		// http.ServeFile(w, r, job.FileName)
+		ServeFile(w, r, job.FileName)
 	}
 	json.NewEncoder(w).Encode(resp)
 }
@@ -100,7 +100,6 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 	defer file.Close()
 	// userUploadfileName := handler.Filename
 	fmt.Printf("Uploaded File: %+v\n", handler.Filename)
-	// TODO limit fileSize
 	fmt.Printf("File Size: %+v\n", handler.Size)
 	fmt.Printf("MIME Header: %+v\n", handler.Header)
 
@@ -110,12 +109,14 @@ func handleUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// read all of the contents of our uploaded file into a byte array
+	// read all of the contents of our uploaded file into a
+	// byte array
 	fileBytes, err := ioutil.ReadAll(file)
 	check(err)
 
-	//send ticket to user with job ID and submit the job into redis
+	//  now send ticket to user with job ID and submit the job into redis
 	jobID := GenRandomID() // uuid
+	os.Rename(file, jobID+".pdf")
 	freshJob := Job{JobStatus: 1, FileName: jobID + ".txt", FileData: fileBytes}
 	fmt.Println("submitting job")
 	SubmitJob(jobID, freshJob)

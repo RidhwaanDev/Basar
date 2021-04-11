@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io"
+	// "io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -10,14 +11,23 @@ import (
 	"strings"
 )
 
-func ServeFile(writer http.ResponseWriter, request *http.Request, name string) {
-	fmt.Println("func ServeFile in file.go")
+func fileNameWithoutExtension(fileName string) string {
+	return strings.TrimSuffix(fileName, filepath.Ext(fileName))
+}
 
+func ServeFile(writer http.ResponseWriter, request *http.Request, name string) {
+	name = fileNameWithoutExtension(name)
+	name = name + ".txt"
+	fmt.Printf("just printing the file: %s \n", name)
 	// Reading header info from the opened file, this will be used for response header "Content-Type"
 	// the first 512 bytes is the header.
 	file, err := os.Open(name)
 	defer file.Close()
 	catch(err)
+	//	data, err := ioutil.ReadAll(file)
+	//	fmt.Println(string(data))
+	//	return
+
 	fileHeader := make([]byte, 512)
 	_, erro := file.Read(fileHeader) // File offset is now len(fileHeader)
 	fileType := http.DetectContentType(fileHeader)
