@@ -24,7 +24,7 @@ type Annotation struct {
 	Text string `json:"text"`
 }
 
-func PrintFile(fileName string) {
+func printFile(fileName string) {
 	file, err := os.Open(fileName)
 	if err != nil {
 		log.Fatal(err)

@@ -2,11 +2,14 @@ package main
 
 import (
 	"fmt"
-	"io"
+	// "io"
+	"bytes"
+	"io/ioutil"
 	"net/http"
-	"os"
+	"time"
 	// "os"
 	"path/filepath"
+	"strconv"
 	"strings"
 )
 
@@ -18,20 +21,22 @@ func ServeFile(w http.ResponseWriter, r *http.Request, name string) {
 	file := fileNameWithoutExtension(name)
 	file = file + ".txt"
 	fmt.Printf("just printing the file: %s \n", file)
-	f, err := os.Open(file)
+
+	downloadBytes, err := ioutil.ReadFile(file)
 
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	stat, _ := f.Stat()
 
-	w.Header().Set("Content-Disposition", "attachment; filename="+file)
-	w.Header().Set("Content-Type", "text/plain")
-	w.Header().Set("Content-Length", stat.Size())
+	//copy the relevant headers. If you want to preserve the downloaded file name, extract it with go's url parser.
+	w.Header().Set("Content-Disposition", "attachment; filename=Wiki.png")
+	w.Header().Set("Content-Type", r.Header.Get("Content-Type"))
+	w.Header().Set("Content-Length", r.Header.Get("Content-Length"))
 
 	//stream the body to the client without fully loading it into memory
-	io.Copy(w, f)
+	io.Copy(w, resp.Body)
+
 }
 
 // func main() {

@@ -43,11 +43,12 @@
 									fetch(url, {method: "GET", headers:headers})
 													.then(response => {
 																	let obj = response.json().then(data => {
-																					console.log("response " + JSON.stringify(data))
+																					console.log("response 2" + data.toString());
 																					let status = data['Status'];
 																					if(status == 2){
-																						alert("done")
+																									alert("Done")
 																						clearInterval(timer)
+																									return;
 																					}
 																	})
 													})
