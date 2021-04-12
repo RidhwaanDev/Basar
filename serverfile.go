@@ -19,27 +19,16 @@ func ServeFile(w http.ResponseWriter, r *http.Request, name string) {
 	file = file + ".txt"
 	fmt.Printf("just printing the file: %s \n", file)
 	f, err := os.Open(file)
-
 	if err != nil {
 		fmt.Println(err)
 	}
 
-	stat, _ := f.Stat()
+	//copy the relevant headers. If you want to preserve the downloaded file name, extract it with go's url parser.
 
 	w.Header().Set("Content-Disposition", "attachment; filename="+file)
-	w.Header().Set("Content-Type", "text/plain")
-	w.Header().Set("Content-Length", stat.Size())
+	w.Header().Set("Content-Type", r.Header.Get("Content-Type"))
+	w.Header().Set("Content-Length", r.Header.Get("Content-Length"))
 
 	//stream the body to the client without fully loading it into memory
 	io.Copy(w, f)
 }
-
-// func main() {
-// 	http.HandleFunc("/", Home)
-// 	http.HandleFunc("/download", ForceDownload)
-//
-// 	// SECURITY : Only expose the file permitted for download.
-// 	http.Handle("/"+file, http.FileServer(http.Dir("./")))
-//
-// 	http.ListenAndServe(":8080", nil)
-// }

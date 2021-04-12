@@ -32,6 +32,8 @@ func init() {
 		DB:       0,  // use default DB
 	})
 
+	rdb.FlushAll(ctx)
+
 	// ping redis to make sure its up
 }
 

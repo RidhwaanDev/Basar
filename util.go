@@ -56,7 +56,7 @@ func ParseJSONFile(fileName string) []string {
 
 	var strList []string
 	for i := 0; i < len(result.Responses); i++ {
-		fmt.Println(result.Responses[i].FullTextAnnotation.Text)
+		// fmt.Println(result.Responses[i].FullTextAnnotation.Text)
 		strList = append(strList, result.Responses[i].FullTextAnnotation.Text)
 	}
 	return strList

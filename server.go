@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -62,7 +63,7 @@ func handleTicketCheck(w http.ResponseWriter, r *http.Request) {
 	}
 	// fmt.Printf("ticket check with id: %s", id[0])
 
-	w.Header().Set("Content-Type", "application/json")
+	// w.Header().Set("Content-Type", "application/json")
 	resp := &ClientUpdate{Status: 0}
 
 	switch job.JobStatus {
@@ -77,8 +78,23 @@ func handleTicketCheck(w http.ResponseWriter, r *http.Request) {
 		// serve fle to client here
 		fmt.Println("OCR is done, this is it boys, send it!")
 		// http.ServeFile(w, r, job.FileName)
-		json.NewEncoder(w).Encode(resp)
-		ServeFile(w, r, job.FileName)
+		// json.NewEncoder(w).Encode(resp)
+
+		file := fileNameWithoutExtension(job.FileName)
+		file = file + ".txt"
+		fmt.Printf("just printing the file: %s \n", file)
+		f, err := os.Open(file)
+		if err != nil {
+			fmt.Println(err)
+		}
+
+		//copy the relevant headers. If you want to preserve the downloaded file name, extract it with go's url parser.
+
+		w.Header().Set("Content-Disposition", "attachment; filename="+file)
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		w.Header().Set("Content-Length", r.Header.Get("Content-Length"))
+		//stream the body to the client without fully loading it into memory
+		io.Copy(w, f)
 	}
 }
 
