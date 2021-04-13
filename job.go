@@ -54,6 +54,9 @@ func SubmitJob(key string, job Job) error {
 }
 func RemoveJob(key string) {
 	err := rdb.Del(ctx, key)
+	if err != nil {
+		fmt.Println(err)
+	}
 }
 
 func MarkAsComplete(key string) {
