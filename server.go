@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io"
+	//	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -29,7 +29,7 @@ func StartServer() {
 
 	fmt.Printf("server started at %s\n", ":"+port)
 
-	log.Fatal(http.ListenAndServe("localhost:8000", nil))
+	log.Fatal(http.ListenAndServe(":8000", nil))
 }
 
 // check errors
@@ -47,8 +47,25 @@ func check(err error) {
 	}
 }
 
+func handleJobFileRemoval(w http.ResponseWriter, r *http.Request) {
+	// client  downloaded file, time to remove the text file
+	enableCors(&w)
+	fmt.Println("hit handle jobFileRemoval")
+
+	id, ok := r.URL.Query()["id"]
+
+	if !ok || len(id[0]) < 1 {
+		log.Println("Url Param 'id' is missing")
+		return
+	}
+	err := os.Remove(fmt.Sprintf("./static/%s.txt", id[0]))
+	check(err)
+}
+
 func handleTicketCheck(w http.ResponseWriter, r *http.Request) {
 	enableCors(&w)
+	fmt.Println("hit handleTicetCheck")
+
 	id, ok := r.URL.Query()["id"]
 
 	if !ok || len(id[0]) < 1 {
@@ -64,7 +81,7 @@ func handleTicketCheck(w http.ResponseWriter, r *http.Request) {
 	// fmt.Printf("ticket check with id: %s", id[0])
 
 	// w.Header().Set("Content-Type", "application/json")
-	resp := &ClientUpdate{Status: 0}
+	resp := &ClientUpdate{Status: 0, FileName: job.FileName}
 
 	switch job.JobStatus {
 	case 0: // waiting
@@ -80,26 +97,18 @@ func handleTicketCheck(w http.ResponseWriter, r *http.Request) {
 		// http.ServeFile(w, r, job.FileName)
 		// json.NewEncoder(w).Encode(resp)
 
-		file := fileNameWithoutExtension(job.FileName)
-		file = file + ".txt"
+		file := job.FileName
 		fmt.Printf("just printing the file: %s \n", file)
-		f, err := os.Open(file)
-		if err != nil {
-			fmt.Println(err)
-		}
+		fileNewLocation := fmt.Sprintf("./static/%s", file)
+		err := os.Rename(file, fileNewLocation)
+		check(err)
 
-		//copy the relevant headers. If you want to preserve the downloaded file name, extract it with go's url parser.
+		// tell the client the job is done. They shoulkd be able to to read the file from ./static
+		json.NewEncoder(w).Encode(resp)
 
 		w.Header().Set("Content-Disposition", "attachment; filename="+file)
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		w.Header().Set("Content-Length", r.Header.Get("Content-Length"))
-		//stream the body to the client without fully loading it into memory
-		io.Copy(w, f)
-		// remove it from disk
-		err := os.Remove(file)
-		if err != nil {
-			fmt.Println("Error in os.Remove in handleTicketCheck, failed to remove the .txt file")
-		}
 	}
 }
 

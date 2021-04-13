@@ -97,7 +97,7 @@ func getJSONResultFiles(fileNameId string) (int, []string) {
 	}
 	var list []string
 	for _, f := range files {
-		fmt.Printf("%s vs %s\n", f.Name(), fileNameId)
+		// fmt.Printf("%s vs %s\n", f.Name(), fileNameId)
 		if filepath.Ext(f.Name()) == ".json" {
 			// fmt.Println(f.Name())
 			list = append(list, f.Name())

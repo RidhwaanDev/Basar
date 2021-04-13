@@ -9,8 +9,11 @@
   <body>
       <input id ="pdf-input" type="file" name="myFile" />
 			<input id='uploadButton' type='button' value='Upload File' />
+			<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
 				<script>
 								document.getElementById('uploadButton').addEventListener('click', uploadFile);
+								 // document.getElementById('uploadButton').addEventListener('click', testFileDownload);
 
 								function uploadFile(){
 												let headers = new Headers();
@@ -47,11 +50,28 @@
 																					let status = data['Status'];
 																					if(status == 2){
 																									alert("Done")
-																						clearInterval(timer)
+																									clearInterval(timer)
+																									testFileDownload(data['FileName'])
 																					}
 																	})
 													})
 									}, 3000)
+					}
+
+					function testFileDownload(fileName){
+									console.log(`getting ${fileName}`)
+									axios({
+													url: `http://localhost:8000/${fileName}`,
+													method: 'GET',
+													responseType: 'blob', // important
+									}).then((response) => {
+													const url = window.URL.createObjectURL(new Blob([response.data]));
+													const link = document.createElement('a');
+													link.href = url;
+													link.setAttribute('download', 'result.txt');
+													document.body.appendChild(link);
+													link.click();
+									});
 					}
                   
 				</script>

@@ -45,7 +45,6 @@ func ParseJSONFile(fileName string) []string {
 		fmt.Println(err)
 	}
 
-	fmt.Println("Successfully Opened users.json")
 	defer jsonFile.Close()
 
 	byteValue, _ := ioutil.ReadAll(jsonFile)

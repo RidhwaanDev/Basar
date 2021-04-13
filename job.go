@@ -14,7 +14,8 @@ type Job struct {
 }
 
 type ClientUpdate struct {
-	Status int
+	Status   int
+	FileName string
 }
 
 type Ticket struct {
@@ -46,9 +47,13 @@ func SubmitJob(key string, job Job) error {
 
 	err = rdb.Set(ctx, key, value, 0).Err()
 	if err != nil {
-		panic(err)
+		// something is wrong with redis. we should write the error to a log file
+
 	}
 	return nil
+}
+func RemoveJob(key string) {
+	err := rdb.Del(ctx, key)
 }
 
 func MarkAsComplete(key string) {
