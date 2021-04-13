@@ -95,6 +95,11 @@ func handleTicketCheck(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Length", r.Header.Get("Content-Length"))
 		//stream the body to the client without fully loading it into memory
 		io.Copy(w, f)
+		// remove it from disk
+		err := os.Remove(file)
+		if err != nil {
+			fmt.Println("Error in os.Remove in handleTicketCheck, failed to remove the .txt file")
+		}
 	}
 }
 

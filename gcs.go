@@ -185,6 +185,7 @@ func DoOCR(jobID string, uploadedPDFName string, uploadedPDFBytes []byte) {
 	fmt.Printf("finalTextFileName %s\n", finalTextFileName)
 	// we wrote the result file to disk, now mark the jobb as compclete
 	MarkAsComplete(jobID)
+	// cleans out the JSON files we downloaded from GCS
 	CleanDownloadedFiles(jobID)
 }
 
