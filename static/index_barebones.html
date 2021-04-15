@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/yanchokraev/grayshift@1.0.0/css/grayshift.min.css" integrity="sha384-GJupCSwpa/5Jlkr/zMNCiBxPP7//lA3VTn0C5aOao0nhGEskGTL19lBzk0eVmfUC" crossorigin="anonymous">
+    <meta charset="UTF-8" /> <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Arabic OCR</title>
+  </head>
+  <body>
+      <input id ="pdf-input" type="file" name="myFile" />
+			<input id='uploadButton' type='button' value='Upload File' />
+			<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+				<script>
+								document.getElementById('uploadButton').addEventListener('click', uploadFile);
+								 // document.getElementById('uploadButton').addEventListener('click', testFileDownload);
+
+								function uploadFile(){
+												let headers = new Headers();
+												headers.append('Origin','http://localhost:8000');
+
+												let file = document.getElementById("pdf-input").files[0];
+												if(!file){
+																alert("no file")
+												}
+												let formData = new FormData();
+
+												formData.append("myFile", file);
+												//upload file
+												fetch('http://localhost:8000/upload', {method: "POST", body: formData, headers:headers})
+																.then(response =>  {
+																			let obj = response.json().then(data => {
+																							let id = data['Id'];
+																							console.log(id)
+																							periodCheck(id)
+																				})
+																})
+								}
+					function periodCheck(id){
+									let headers = new Headers();
+									headers.append('Origin','http://localhost:8000');
+									let url = 'http://localhost:8000/checkTicket?' + new URLSearchParams({ id : id})
+
+									let timer = setInterval(function(){
+													console.log("checking if job is done")
+									fetch(url, {method: "GET", headers:headers})
+													.then(response => {
+																	let obj = response.json().then(data => {
+																					console.log("response 2" + data.toString());
+																					let status = data['Status'];
+																					if(status == 2){
+																									alert("Done")
+																									clearInterval(timer)
+																									testFileDownload(data['FileName'])
+																					}
+																	})
+													})
+									}, 3000)
+					}
+
+					function testFileDownload(fileName){
+									console.log(`getting ${fileName}`)
+									axios({
+													url: `http://localhost:8000/${fileName}`,
+													method: 'GET',
+													responseType: 'blob', // important
+									}).then((response) => {
+													const url = window.URL.createObjectURL(new Blob([response.data]));
+													const link = document.createElement('a');
+													link.href = url;
+													link.setAttribute('download', 'result.txt');
+													document.body.appendChild(link);
+													link.click();
+									});
+					}
+                  
+				</script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-alpha3/dist/js/bootstrap.min.js" integrity="sha384-t6I8D5dJmMXjCsRLhSzCltuhNZg6P10kE0m0nAncLUjH6GeYLhRU1zfLoW3QNQDF" crossorigin="anonymous"></script>
+  </body>
+</html>
+
