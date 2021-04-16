@@ -218,74 +218,11 @@ body, html {
 
 
 				</style>
+				<link rel="stylesheet" href="css/loading.css">
 				</head>
 				<body>
 			<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-								<script>
 
-												document.getElementById('uploadButton').addEventListener('click', uploadFile);
-// change button to loading bar
-// document.getElementById('uploadButton').addEventListener('click', testFileDownload);
-
-function uploadFile(){
-				let headers = new Headers();
-				headers.append('Origin','http://localhost:8000');
-
-				let file = document.getElementById("fileUpload").files[0];
-				if(!file){
-								alert("no file")
-				}
-				let formData = new FormData();
-
-				formData.append("myFile", file);
-				//upload file
-				fetch('http://localhost:8000/upload', {method: "POST", body: formData, headers:headers})
-								.then(response =>  {
-												let obj = response.json().then(data => {
-																let id = data['Id'];
-																console.log(id)
-																periodCheck(id)
-												})
-								})
-}
-function periodCheck(id){
-				let headers = new Headers();
-				headers.append('Origin','http://localhost:8000');
-				let url = 'http://localhost:8000/checkTicket?' + new URLSearchParams({ id : id})
-
-				let timer = setInterval(function(){
-								console.log("checking if job is done")
-								fetch(url, {method: "GET", headers:headers})
-												.then(response => {
-																let obj = response.json().then(data => {
-																				console.log("response 2" + data.toString());
-																				let status = data['Status'];
-																				if(status == 2){
-																								alert("Done")
-																								clearInterval(timer)
-																								testFileDownload(data['FileName'])
-																				}
-																})
-												})
-				}, 3000)
-}
-
-function testFileDownload(fileName){
-				console.log(`getting ${fileName}`)
-				axios({
-								url: `http://localhost:8000/${fileName}`,
-								method: 'GET',
-								responseType: 'blob', // important
-				}).then((response) => {
-								const url = window.URL.createObjectURL(new Blob([response.data]));
-								const link = document.createElement('a');
-								link.href = url;
-								link.setAttribute('download', 'result.txt');
-								document.body.appendChild(link);
-								link.click();
-				});
-}
-								</script>
 								<div class="d-flex flex-column flex-md-row align-items-center p-3 px-md-4 mb-3 bg-white border-bottom box-shadow">
 												<h3 class="my-0 mr-md-auto font-weight-bold"> <a href="home.html"> scanpdf </a> </h3>
 												<nav class="my-2 my-md-0 mr-md-3">
@@ -314,13 +251,15 @@ function testFileDownload(fileName){
 																				<div class="d-inline-block ml-2">
 																								<label class="small mb-1" for="pdf upload">Choose PDF</label>
 																								<input type="file" id="fileUpload" />
-																								<button type="submit" value="upload" class="btn" onclick="uploadFile()" style="width: 150px; margin-top: -3px;">Upload PDF</button>
+								<button id="uploadButton" type="submit" value="upload" class="btn" style="width: 150px; margin-top: -3px;">Upload PDF</button>
 																				</div>
+
 																</div>
 																<div class="mt-3 small text-center"> Need batch jobs? <a href="enterprise.html"><u style="color: #000;">Contact us for our Enterprise API</u></a> 
 																</div>
 																<div id="error-message" class="d-none" style="color: #000;">Please enter a valid email address</div>
 												</div>
+												<div id="loader" class="loader"></div>
 								</div>
 								</div>
 								</div>
@@ -330,6 +269,7 @@ function testFileDownload(fileName){
 																		center;"><a href="home.html" style="color:
 																						#000;">scanpdf.app</a>&nbsp;&nbsp;&nbsp;
 												</div>
+				<script type="text/javascript" src="js/client.js"> </script>
 												<style>
 
 /* latin */
