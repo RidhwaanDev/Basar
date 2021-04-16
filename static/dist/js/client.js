@@ -47,6 +47,7 @@ function periodCheck(id){
 																				if(status == 2){
 																								alert("Done")
 																								clearInterval(timer)
+																								loader.style.display = 'none';
 																								testFileDownload(data['FileName'])
 																				}
 																})
