@@ -115,9 +115,9 @@ func handleTicketCheck(w http.ResponseWriter, r *http.Request) {
 // uses uploads a pdf -> gets a pdf back in Arabic
 func handleUpload(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("hit download endpoint")
+	enableCors(&w)
 
 	r.ParseMultipartForm(10 << 20)
-	enableCors(&w)
 
 	file, handler, err := r.FormFile("myFile")
 	if err != nil {
