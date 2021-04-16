@@ -16,7 +16,8 @@ func main() {
 }
 
 func StartServer() {
-	http.Handle("/", http.FileServer(http.Dir("./static")))
+	root := "/home/ridhwaan/ArabicOCR/static/"
+	http.Handle("/", http.FileServer(http.Dir(root)))
 	http.HandleFunc("/upload", handleUpload)
 	http.HandleFunc("/checkTicket", handleTicketCheck)
 
@@ -29,7 +30,11 @@ func StartServer() {
 
 	fmt.Printf("server started at %s\n", ":"+port)
 
+	dir, _ := os.Getwd()
+	fmt.Println("current path :" + dir)
+
 	log.Fatal(http.ListenAndServe(":8000", nil))
+
 }
 
 // check errors
