@@ -17,6 +17,12 @@ func main() {
 
 func StartServer() {
 	root := "/home/ridhwaan/ArabicOCR/static/"
+	if a := len(os.Args); a > 1 {
+		loc := os.Args[1]
+		if loc == "local" {
+			root = "./static"
+		}
+	}
 	http.Handle("/", http.FileServer(http.Dir(root)))
 	http.HandleFunc("/upload", handleUpload)
 	http.HandleFunc("/checkTicket", handleTicketCheck)
