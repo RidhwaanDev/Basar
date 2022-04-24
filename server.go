@@ -27,7 +27,6 @@ func StartServer() {
 	http.HandleFunc("/upload", handleUpload)
 	http.HandleFunc("/checkTicket", handleTicketCheck)
 
-	os.Setenv("GOOGLE_APPLICATION_CREDENTIALS", "arabic-ocr-300518-e2c236268e78.json")
 
 	port := os.Getenv("PORT")
 	if port == "" {
